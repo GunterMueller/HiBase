@@ -1,0 +1,28 @@
+Fri Nov 16 11:48:13 2001  Kenneth Oksanen  <cessu@kahvi.hel.fi.ssh.com>
+
+	* smart_ptr.[hc]: Bugfixes.
+
+	* Fixed some causes of gcc-3 warnings.
+
+Mon May  7 14:12:14 2001  Kenneth Oksanen  <cessu@ssh.com>
+
+	* Made a new GPL'd release `hibase-0.1.2'.
+
+	* Ran autoconf, minor fixes in README and some comments.
+
+	* Wrote functions `smart_ptr_{init,uninit,assign,ref}' and a large
+	comment of how to use smart ptrs.
+
+Tue Jun 13 14:04:34 2000  Kenneth Oksanen  <cessu@orfeus.cs.hut.fi>
+
+	* Made a new GPL'd release `hibase-0.1.1'.
+
+	* shades.c: Fixed some minor warnings in assertions.
+
+	* Fixed several test program's `main's to return int instead of
+	void.
+
+	* configure.in: Removed `-fno-inline', it apparently breaks at
+	least RedHat 6.2's includes.
+
+	* Rotated `ChangeLog's.

@@ -1,0 +1,5125 @@
+Tue Mar 31 14:04:35 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_asm.c (main): Updated byte code reporting, changed ratios
+	to percentages.
+
+	* configure.in: Bugfix.  Because of blind cut-and-pasting,
+	--enable-speed actually triggered --enable-bcprof.
+
+	* AUTHORS: Updated.
+
+Tue Mar 31 12:17:42 1998  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* cells.c (cell_check): Bugfix, set variable `nm' only when
+ 	--enable-red-zones.
+
+Mon Mar 30 19:53:56 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* configure.in: Check for option `--enable-bcprof'.
+	
+	shades.h, shades.c (number_of_words_allocated): Defined, and
+ 	updated in `allocate' and `raw_allocate' whenever
+ 	`--enable-bcprof'.
+
+	interp.c (interp): Added two counters,
+	`number_of_sequences_executed' and `number_of_insns_executed' and
+	code to update them whenever `--enable-bcprof'.
+
+	test_asm.c (main): Report the above three counters and their
+	reduction compared to `nolang-1.0' distribution and its benchmark.
+
+	* insn-def.h (INSN_pick): assert we don't dig up an
+	`UNDECL_WORD_CLOBBER_COOKIE' from the cont frame, and if we do,
+	backtrace before dying.
+
+	* interp.c (backtrace): Wrote.
+
+	* cells.c (cell_check): If --enable-red-zones, whenever a word in
+ 	a cell is left undeclared, clobber it.  Most importantly, this
+ 	helps to detect erroneous cont frame descriptions produced by the
+ 	Nolang compiler.
+
+	cookies.h (UNDECL_WORD_CLOBBER_COOKIE): Defined.
+
+	* shades.c (allocate, raw_allocate, can_allocate): Moved call to
+ 	`make_first_generation_assertions' from allocation functions to
+ 	`can_allocate'.  This relaxing of cell integrity constraints
+ 	allows cells to be left unfinished when allocating new ones, but
+ 	still requires all data structures to be consistent when calling
+ 	`can_allocate'.
+	
+	params-def.h (first_generation_assertion_heaviness): Changed
+	default from 20 to 60.
+
+Mon Mar 30 17:45:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* configure.in: Added new option --enable-heavy-assert.
+	This enables the macro heavy_assert(), which is like assert(),
+	but should be used only for non-constant-time tests, thus
+	allowing us to keep asserts on most of the time without
+	affecting run times drastically. (Goodbye to those half-hour
+	waits while the machine did all the work and the programmer
+	could concentrate on irc...)
+	
+	* includes.h, shtring.c: Related changes.
+
+Sun Mar 29 23:37:17 1998  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c, template_{client,server}.c: removed commands
+	commented out by // to keep compilers and liw happy.
+
+Sun Mar 29 01:10:21 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* asm_lex.l: Bugfix, a horrendous one!  `resolve_ptrs' (now
+ 	renamed `asm_resolve_ptrs'), which performs some final
+ 	representation-level optimizations on byte code sequences, was not
+	called before the `flush_batch' in `asm_lex.l'.  When a subsequent
+	`resolve_ptrs' was issued in the byte code assembler elsewhere, it
+	mutated already tenured bcode sequences.
+
+	asm.c, asm_defs.h, insn-calls.h: Related changes and new
+ 	assertions.
+
+Sat Mar 28 18:45:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring_cursor.[ch]: Renamed shtring_cmp_new to
+	shtring_cmp_piecemeal, added shtring_cmp_piecemeal_max_allocation.
+	Fixed bug in shtring_cmp_piecemeal so that it works even
+	if the maxchars argument is not a multiple of sizeof(word_t)
+	or the offsets into the two strings are not multiples of
+	sizeof(word_t). The working implementation is rather slow,
+	however, since it compares a byte at a time, and will have
+	to be optimized later.
+	
+	* test_shtring.c: Added testing for shtring_cmp_piecemeal.
+	
+	* cells.h: Added CMP_PLEASE_CONTINUE.
+
+Sat Mar 28 17:30:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.[ch]: Removed shtring_cmp, since its memory use is too
+	difficult to compute. Use shtring_cmp_without_allocating instead,
+	since it doesn't need any extra memory. Also removed
+	shtring_cmp_max_allocation.
+	
+	* test_shtring.c, insn-string.h: Related changes.
+	
+	* shtring.c: Removed old, over-complicated and commented-out
+	implementation of shtring_cmp_without_allocating. It hadn't been
+	used for ages, anyway.
+
+Sat Mar 28 12:21:02 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c: Put commit group and gc messages to stderr instead of
+ 	stdout.
+
+Mon Mar 23 00:49:09 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* tagged.h (TAGGED_IS_EQUAL), tagged.c (tagged_is_equal): Wrote.
+
+	* insn-def.h: Wrote `INSN_generic_equal' and added
+	`fflush(stdout)' to `INSN_t_print'.
+
+Sun Mar 22 08:33:58 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (INSN_list_append): Several bugfixes.  Most
+	importantly, switched the order of `SUFFIX' and `PREFIX' and
+	checks whether `PREFIX_STACK' is empty before the second pass.
+
+	* insn-def.h (INSN_exit): Wrote.
+
+	* tagged.c (tagged_fprint): A meager attempt to print objects.
+	Helpful, but amateurish.
+
+	* interp.c (interp): When `--enable-insn-trace', prints also the
+	id of the bcode when beginning to run a byte code sequence.
+	Match that number with the interned shtrings and you can trace the
+	insn to its function (though somewhat cumbersomely).
+
+	interp.h (BCODE_ID): Wrote.
+
+	* asm_lex.l: Allow question, exclamation and percentage characters
+ 	in tokens that begin with an underscore (such as user-defined
+ 	function names).
+
+Sat Mar 21 20:36:52 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h: Several insns used value zero to signal FALSE (which
+ 	it still is), changed to use the preferred value `TAGGED_FALSE'.
+
+	* insn-string.h (INSN_string_cmp, INSN_string_quote): Wrote.
+
+Fri Mar 20 03:01:16 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-string.h (INSN_string_append, INSN_int_to_string):
+	Initiated this new file and wrote the two insns.
+
+	Makefile.in: Related addition.
+
+	* insn-obj.h: New file.  Moved insns related to handling objects
+ 	(and classes and prototypes) from `insn-def.h' to here.
+	
+	Makefile.in: Related addition.
+
+	* insn-def.h (INSN_get_obj_method, INSN_insert_obj_method):
+	Wrote.
+
+	insn-def.h (INSN_multiple_inherit, INSN_inherit_new_proto): Added
+	inheriting of methods.  In some cases added the request that these
+	insns be passed the arg `__traits' which is used to refer to the
+	global variable, which contains the pointer to the triev2, which
+	indexed with the class id gives the class's trait, which is then
+	indexed by the method id to get the individual method.
+
+	* insn-def.h (INSN_multiple_inherit): Bugfix.  Copy the class id
+ 	from the overridden prototype instead of the overriding proto.
+
+Thu Mar 19 18:37:30 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* tagged.h (TAGGED_TRUE, TAGGED_FALSE): Wrote.
+
+	* insn-def.h (INSN_declare_obj_isa, INSN_t_isa,
+	INSN_t_branch_if_not_isa): Wrote.
+
+	insn-def.h (INSN_multiple_inherit): Inherits now also the ISA map
+	(key == 0 in the field trie).
+
+Thu Mar 19 00:28:21 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (INSN_multiple_inherit): Wrote.
+
+	* triev2.[hc] (triev2_contains): Wrote.  Minor cleanups in some
+	other places.
+
+Wed Mar 18 01:14:10 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* triev2.c: Removed a number of assertions which didn't allow
+ 	storing `NULL_WORD's into the triev2's.
+
+	triev2.c (triev2_find_quick): Bugfix.  The assertion contained a
+	shift by 32.
+
+	* insn-def.h (INSN_set_global, INSN_make_new_proto,
+	INSN_inherit_new_proto, INSN_rebind_obj_field,
+	INSN_get_obj_field): Wrote.
+
+	* interp.c (global_cache, global_set, global_get): Stored values
+	are now `word_t's instead of `ptr_t's.
+
+	insn-def.h, insn-calls.h: Related changes.
+
+	* interp.c (global_set): Wrote.
+
+	* cells-def.h (CELL_object): Defined.
+
+Tue Mar 17 17:06:05 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_asm.c (main): If there is a bcode called `_init', then
+ 	execute it before the bcode specified by the user.
+
+Thu Mar 12 23:28:15 1998  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c: Changed to use readv/writev instead of read/write.
+	NOTE: buffer chunk freeing is disabled for now.
+
+Thu Mar 12 22:38:22 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Makefile.in: `.depend' is now a `PRECIOUS' target.
+
+Wed Mar 11 19:44:31 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h: Elaborated comments with a minor detail.
+
+Wed Mar 11 15:54:10 1998  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* root-def.h: added a root ptr for transaction consistent view
+	of C++ world.
+
+Tue Mar  3 20:05:57 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* README: Changed to correspond to the below changes.
+
+	* params.c, Makefile.in: Pass `libdir' as macro `LIBDIR' and try
+ 	to read parameter settings also from `LIBDIR/.shadesrc'.
+
+	* Makefile.in: Added some prefix- and dir-variables and targets
+ 	`install' and `installdirs'.
+
+	configure.in: Set default prefix to `/usr/local/hibase'.
+
+	mkinstalldirs: New file, from GNU hello-1.3.
+
+Mon Mar  2 17:36:23 1998  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* priq.[hc]: Priority queue has only one cell type:
+	`CELL_priq_item' anymore. This increases the time of
+	`priq_find_min' from O(1) to O(log n), but makes the code simpler. 
+	
+	* cells-def.h: Removed `CELL_priq'.
+
+Sun Mar  1 20:31:58 1998  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* template_client.c, test_inp.h: added #include <sys/time.h>
+
+	* template_server.c: added cast to ptr_t for packet to be
+	written with `net_write_mem'.
+
+Wed Feb 25 23:55:13 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (tuple_make): Bugfix.  Fields in the tuple were
+	copied from incorrect positions in the stack.
+
+	* insn-def.h (t_branch_if_not_ntuple): Wrote.
+
+	asm*: New insn variant `branch_arg', added functions and cases to
+	handle it.  The parser can read them.
+
+	* insn-def.h (t_neg): Wrote.
+
+Mon Feb 23 14:15:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.c: Fixed bug in shtring_fprint to print only the part of
+	the chunk tree that contains the text of the shtring.
+	
+	* test_shtring.c: Added code to test shtring_fprint.
+
+Mon Feb 23 01:51:10 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (tuple_make, tuple_ref): Wrote.
+
+	tagged.c (tagged_fprint): Can print also tuples.
+
+Sat Feb 21 15:31:09 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_tpcb.c, test_tpcb_{kdtq,triev2,dh}.c
+	(update_{branch,teller,account}): A minor optimization.  Switched
+ 	to use `raw_allocate' and copy p0 as is from the old cells.
+
+Wed Feb 18 13:47:47 1998  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* priq.[hc], queue.[hc], avl.[hc], ist234.[hc] : Made some small
+	changes Lasu suggested after reviewing priq.* and queue.*.
+
+Tue Feb 17 17:34:28 1998  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* triev2.[hc] (triev2_find_max): Wrote, compiled and tested. Seems
+	to work.
+
+	*test_aux.c (maximum_in_history): Wrote, compiled and tested. Seems
+	to work.
+
+Mon Feb 16 18:36:51 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (major_gc_step): Bugfix.  Statistics on generation
+ 	shrinkage may have produced a division by zero.
+
+Mon Feb 16 14:21:12 1998  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* jpqueue.[ch]: invert and 2-way capability added.
+
+Sat Feb 14 17:25:13 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-calls.h (call, tail_call): Bugfix.  The `p0 & 0xFFF' of the
+ 	new cont was incremented by arity, not arity-1, which would have
+ 	been correct.  Changed to the even more preferable `|= 0xFFF'.
+  	Allowed some optimizations elsewhere.
+
+	interp.c (load_bcode): Sets the low bits of bcode's p0 to the byte
+ 	code's id.  This may help debugging.
+
+	* test_tpcb.c, test_tpcb_kdqt.c, test_tpcb_dh.c,
+ 	test_tpcb_triev2.c (update_account, update_teller, update_branch):
+ 	Fixed a blatant bug of not setting the length of the new word
+ 	vectors.  This may have lead to incorrect benchmark results.
+
+	* digit_string.c (convert_chars_to_dstr_buffer): Removed return
+	with value from this void function.
+
+Fri Feb 13 17:20:46 1998  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* lq.c (lq_get_first) : wrote, and compiled. 
+
+Thu Feb 12 17:24:54 1998  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_inp*.{h,c}: Modified to match the test cases described in
+	the Oracle test sheet. The argument "--run=transaction-type"
+	notifies the client which transaction it should run. The value of
+	the transaction type should be between 0 and 2.
+
+Wed Feb 11 23:09:44 1998  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* jpqueue.[ch], test_jpqueue.c: My attempt at the functional
+	queue swamp.
+
+Wed Feb 11 22:57:20 1998  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: Made `net_get_wakeup' to return error event with
+	error field `NET_NO_MORE_WAKEUPS' if no more wakeups are
+	available.
+
+	* template_server.c, test_inp.c: changed to comply with above.
+
+	* template_client.c, test_inp_client.c: bug fixed: when reading
+	the packet, request only the amount left of the whole packet
+	per read() call.
+
+	* test_inp.c (server_loop): changed to get wakeups only if
+	one or more connections have pending events.
+
+Tue Feb 10 12:45:47 1998  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* antree.h: some documentation added.
+
+	* antree.c: antree_display_stat added for statistical analysis.
+
+Tue Feb 10 02:09:45 1998  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c (net_number_of_wakeups): added checking for errors
+	from select call.
+
+	* net.c: changed type of `wakeups' from unsigned long to int.
+
+	* net.c: changed the default write threshold to 200kB.
+
+	* net.c: (read_to_buffer, write_from_buffer): return value of
+	read and write calls are now checked against -1 for errors rather
+	than the amount tried to read/write.
+
+Mon Feb  9 02:31:32 1998  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c (net_number_of_wakeups): bug fixed: when handling
+	writing errors, the connection could still be left as
+	a succesful read event.  Now it is cleared and the number
+	of wakeups is reduced accordingly.
+
+	* net.c (net_get_wakeup): bug fixed: don't advance the wakeup
+	handle before returning anymore to catch different wakeups on the
+	same connection.
+
+Thu Feb  5 16:25:01 1998  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_inp.h: Wrote.
+
+	* test_inp.c: Added support for server mode.
+
+	* test_inp_client.c: Wrote. The client version of `test_inp'.
+
+Thu Feb  5 10:10:05 1998  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* antree.c: yet another minor improvements to get_physical_index.
+
+	* antree.c: antree_delete added.
+
+Thu Feb  5 00:14:09 1998  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c (net_number_of_wakeups): bug fixed: now calls
+	`write_from_buffer' correctly with the file descriptor,
+	not with the network handle.
+
+	* template_server.c (server_loop): moved `try_accept' from
+	beginning of the while (1) -loop to just before the loop.
+
+	* template_server.c (server_loop): changed value of
+	`tv_sec' from 1 to 0.
+
+	* template_server.c (try_read): fixed parameter type `%d'
+	to `%s' on one of the fprintfs.
+
+Wed Feb  4 21:54:24 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_inp.h: Added inclusion of <time.h>.
+
+	* Makefile.in: Added `test_inp.h' to `TESTHDRS'.  Otherwise target
+	`dist' fails to produce a correctly installable distribution.
+
+	Moved `template_config.h' from `SIMPLEHDRS' to `TESTHDRS'.
+
+Wed Feb  4 16:56:58 1998  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* antree.c: get_physical_index optimized (gain more than 10%
+	in test_inp).  go_child removed (gain about 4% when run=0).
+
+Wed Feb  4 15:23:47 1998  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* digit_string.[hc] (convert_chars_to_dstr_buffer): Wrote.
+
+Wed Feb  4 14:19:46 1998  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* antree.c: a minor optimizations; a couple of calls to
+	digit_string functions converted to their inlined versions.
+
+Wed Feb  4 14:03:13 1998  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c (net_get_wakeup): bug fixed: connections with status
+	`CONN_NONE' are now skipped when searching for the next wakeup.
+
+Wed Feb  4 13:21:38 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* template_client.c: Added inclusion of `<time.h>'.
+
+Wed Feb  4 12:07:08 1998  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* template_client, _server: commented out checking of the
+	packet.
+
+	* template_client: added timing and throughput calculation.
+
+Tue Feb  3 19:50:54 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_inp.c (run_benchmark): Two bugfixes, the latter being using
+	a `double' value as a truth value.
+
+	* shades.c (generation_info_t.shrinkage, avg_generation_shrinkage,
+ 	mark_major_gc_generations, major_gc_step), 
+	params-def.h (allow_additional_generationality,
+ 	generation_shrinkage_margin): Added a possibility to run the
+	database with additional generationality.  Currently, however,
+	such database images are not recoverable.
+
+	Makefile.in, includes.h: Added `-lm' to libs and `math.h' to the
+	included system files.
+
+	* test_inp.c (update_subs_counter): Bugfix.  Removed one excess
+ 	`WORD_TO_PTR'.
+
+Tue Feb  3 17:00:09 1998  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_inp.c: New name for the test file `test_oracle8.c'. Added
+	numerous runtime arguments and latency statistics information.
+
+Tue Feb  3 14:24:24 1998  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* digit_string.[hc]: _get* and _set* renamed.  get* moved
+	to digit_string.h.
+
+Tue Feb  3 12:27:44 1998  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* template_server.c, template_client.c, template_config.h:
+	checked in.
+
+	* Makefile.in (TESTPROGS): added template_server and _client.
+
+	* Makefile.in (SIMPLEHDRS): added template_config.h.
+
+Sat Jan 31 20:53:17 1998  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_oracle8.c: Added transaction functions `do_bnumber_
+	translation' and `update_subs_counter'. These transaction
+	functions are called from a simple test driver `run_benchmark'.
+	
+Fri Jan 30 16:48:03 1998  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_oracle8.c (rec_print): Wrote. Prints out a single record.
+	The key (Bnumber) of the record should be given as a commandline
+	using the following format: "--print=bnumber,day-of-week,time-in-
+	minutes" .
+
+Thu Jan 29 18:19:40 1998  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_oracle8.c (create_benchmark): Creating a database for
+	Oracle8 benchmark seems to work now. Adopted latest changes
+	informed by Warton. Introduced `antree' routines for using digit
+	strings as keys. Root pointer `test4' is used to keep temporary
+	shtrings during shtring catenations.
+
+	* root-def.h: Added new root pointer `test4'.
+
+Wed Jan 28 17:20:46 1998  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* Makefile.in (TESTPROGS): Added target `test_oracle8'.
+
+	* test_oracle8.c: Wrote. Yet another benchmark program. 
+
+	* {test_tpcb_ist234,test_access_method}.c: Adopted macro name
+	changes made in `ist234.h'.
+
+Wed Jan 28 16:58:27 1998  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* ist234.c (ist234_delete): Wrote, compiled, and tested. Seems to
+	work now.
+
+	* ist234.h: Defined `IST234_MAX_ALLOCATION_IN_INSERT' and
+	`IST234_MAX_ALLOCATION_IN_DELETE', which replace old 
+	`IST234_MAX_ALLOCATION'.
+	
+Wed Jan 28 13:33:44 1998  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* io.c: `FIXED_ROOT_DISK' is now #defined only if
+	`OPTIMIZED_ROOT_LOCATION' is not.
+
+	* io.c (io_write_root): bug fixed: now increases the per file
+	`number_of_free_pages' when marking the old root free.
+
+Tue Jan 27 06:30:18 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* configure.in: Fixed the test of `$enableval' in rule
+	`--enable-red-zones'.
+
+	* test_sysm.c: Fixed a bug of comparing Shades' pointers to zero
+	(or NULL) instead of the correct `NULL_PTR'.  The benchmark no
+ 	longer appears to crash, and even the results seemed to surge
+ 	somewhat.
+
+Sat Jan 24 19:36:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* configure.in: Fixed bug: Removed '*4' from the code to implement
+	option --enable-chunk-size, since the unit for the argument is char,
+	not word (the '*4' would have been correct if the unit had been
+	word).
+	
+	* shtring.c: Removed extra '* sizeof(word_t)' from the sizes of
+	some arrays for holding parts of shtrings. Same problem as with
+	configure.in above.
+	
+	* shtring.h: Changed the default chunk size from 8 to 32 characters
+	(no, not words).
+
+Sat Jan 24 13:01:55 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* cells-def.h: Removed cell type `object' and changed `PTR's in
+	`tuple's to `TAGGED's.
+
+	* configure.in, shades.[ch]: Don't install and test first
+ 	generation red zones unless `--enable-red-zones' is given.
+
+	* cells.c, insn-def.h, tagged.[hc]: Moved `tagged_fprint',
+ 	`TAGGED_TO_SIGNED_WORD' and `SIGNED_WORD_TO_TAGGED' to the new
+ 	files `tagged.[hc]'.  Fixed printing of WORDs in `tagged_fprint'
+ 	to use `TAGGED_TO_SIGNED_WORD' instead of mere shifts.
+
+	Makefile.in: Corresponding additions.
+
+	* insn-def.h (t_mult): Renamed this insn to `t_mul', as was
+	assumed by the Nolang-compiler.
+
+Thu Jan 22 09:27:49 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* cells-def.h (CELL_tuple): Renamed from `CELL_env'.
+
+	test_sysm.c: Corresponding changes.
+
+Mon Jan 19 03:05:29 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* root-def.h, interp.c, insn-defs.h, insn-calls.h, asm.c: Renamed
+ 	`cont_protos' root pointer to `globals', and renamed the `cont'
+ 	cache to a `global' cache.  Increased it's size from 16 to 128
+ 	lines.
+
+	* insn-calls.h (call, tail_call): Another bugfix: Treat zero-arity
+ 	function calls correctly, i.e. grok the `accu' out of the callee's
+ 	cont.
+
+	* insn-calls.h (call, tail_call): Bugfix.  Copy also the
+ 	previously bound arguments from the prototype cont frame.
+
+	* insn-calls.h (bind): Assert the cont is bound only once.
+
+Wed Jan 14 14:59:53 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* asm_lex.l: Allow BCODE tokens start with arbitrarily many
+	underscores `_'.
+
+Mon Jan 12 14:20:03 1998  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* cells-def.h, Makefile.in, digit_string.[ch],
+	test_digit_string.c: Digit strings added.
+	
+Mon Jan 12 13:16:18 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (get_global): Renamed to this from `lookup_cont'.
+
+	* insn-calls.h (bind, call, tail_call): Wrote these generic
+	versions.  `call' and `tail_call' don't check for partial
+	application, yet.
+
+	* insn-def.h, insn-calls.h (return): Moved to `insn-calls.h'.
+
+Thu Jan  8 17:24:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* configure.in: Added --enable-chunk-size so that the size of a
+	chunk can be set at compile time. Default is 32 characters.
+	
+	* shtring.h, test_shtringc: Related changes.
+
+Tue Jan  6 09:03:48 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-calls.h, asm.c (resolve_ptrs): Dedicated versions of call
+ 	insns for arities 0 to 4.
+
+                test            2.3     new     improvement
+                fib             17.81   15.35   16.03%
+                primes          10.81   9.98    8.32%
+                ulam            14.23   14.00   1.64%
+                mergesort       31.89   29.46   8.25%
+                tpcb            48.39   45.21   7.03%
+
+	* insn-calls.h: Moved call instructions to this file.
+	
+	Makefile.in, insn-def.h: related changes.
+
+Mon Jan  5 14:24:39 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* asm.c (resolve_ptrs, add_bcode_to_bcode_list): Wrote.  Performs
+ 	pointer resolvings for call insns.  We may even create cyclic ptr
+ 	structures, as long as they remain in the same generation.
+	
+	asm.c (asm_finish_bcode): Removed resolvings from here.  Some
+ 	simplifications.
+
+	asm.c (asm_file): Flush a batch before reading any bcodes in so
+	that as many bcodes as possible fit into the first generation.
+	Call `resolve_ptrs' in the end.
+	
+	asm.c: Wherever `flush_batch()' is called, first call
+ 	`resolve_ptrs()'.
+
+	asm_defs.h: Removed `ASM_PTRED'.
+
+	insn-def.h: Removed `call_self' and `tail_call_self' as obsolete
+	now that we have the above resolvings.
+	
+	All `.s'-files: Changes to reflect the above.
+
+	interp.c: Reduced both cache sizes from 64 to 16 lines.
+	
+	bchodestones after the above changes:
+                test            2.3     new     improvement
+                fib             17.81   16.49   8.00%
+                primes          10.81   10.03   7.78%
+                ulam            14.23   13.99   1.72%
+                mergesort       31.89   29.44   8.32%
+                tpcb            48.39   44.24   9.38%
+	(Net improvements specifically in the call-intensive test `fib'.)
+
+	* cells-def.h (cont): Make cont cell have its size in 
+	`(p0 >> 12) & 0xFFF' and the pre-execution stack pointer in 
+	`p0 & 0xFFF'.
+
+	asm.c, asm_parse.y, asm_lex.l, interp.c (load_bcode): Added
+ 	directive `.entry'.  Make a cont proto only for those bcode
+	sequences that have this directive.
+
+	interp.c: Wrote a cont cache, very similar to the bcode cache.
+
+	insn-def.h (lookup_cont, send_to_cont): Wrote tentatively.
+	
+	root-def.h (cont_protos): Added.
+
+	insn-def.h, interp.c, test_asm.c: Numerous respective changes.
+
+	bchodestones before the above changes:
+                test            2.3     new     improvement
+                fib             17.81   17.68   0.74%
+                primes          10.81   9.97    8.43%
+                ulam            14.23   13.99   1.72%
+                mergesort       31.89   29.54   7.96%
+                tpcb            48.39   44.40   8.99%
+	
+	bchodestones after the above changes:
+                test            2.3     new     improvement
+                fib             17.81   17.17   3.73%
+                primes          10.81   9.96    8.53%
+                ulam            14.23   14.00   1.64%
+                mergesort       31.89   29.92   6.58%
+                tpcb            48.39   44.92   7.72%
+	
+	(Now much of a difference.)
+	
+Sat Jan  3 09:49:54 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.[hc] (raw_allocate): Wrote.  This optimizes some minor
+	details.  Don't use by default.
+
+Fri Jan  2 10:28:00 1998  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* cells-def.h: Removed the cell `fun' and marked `env' obsolete.
+  	Removed field `env' from `cont'.  (Closure variables will be
+ 	treated as additional arguments and copied into the callee's frame
+ 	instead of putting them in a separate closure (environment) cell.
+	This allows leak-free garbage collection also of variables that
+	would be in a closure!)
+
+	test_asm.c, interp.c, insn-def.h: Numerous related changes.
+
+Tue Dec 30 12:43:02 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_access_method.c: Minor cleanup. Removed global variable
+	`total_keys'. Made related changes elsewhere.
+	(do_insert/delete): Modified to use two root pointers. Root
+	pointers `test2' and `test3' are now used alternately to
+	insert/delete keys during the test.
+
+	* root-def.h: Added new root pointer `test3'.
+
+Mon Dec 29 06:00:34 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* run_tpcbs: Changed parsing of the `.out'-file to understand times
+	of format "number+number" instead of just "number".
+
+Tue Dec 23 12:40:24 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_access_method.c: Rewrote the insertion (and deletion)
+	benchmark. In this new version, a database is created and a set 
+	of keys, defined in parameter `test_am_key_set_size', added and
+	discarded alternately. 
+
+	* params-def.h: Added new parameter `test_am_key_set_size'.
+
+Mon Dec 22 17:13:14 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_access_method.c (do_test): Replaced root pointer `test_xm'
+	with `test1'.
+
+	* root-def.h: Removed root pointer `test_xm'.
+
+Thu Dec 18 15:56:34 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_access_method.c (do_test): Modified the output format to 
+	support the script file `run_tpcbs'.
+
+	* params-def.h: Modified the names of the access method benchmark
+	parameters to `test_am_name' and `test_am_type'.
+
+Tue Dec 16 17:56:10 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* insn-def.h (t_print): Don't print if `print_insns_are_disabled' is
+	nonzero.
+	
+	(t_mul_imm): Bugfix.  Multiplied with the tagged value without
+	untagging it first.
+
+Wed Dec 10 14:41:04 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c: cosmetic changes to comments, renamed buffer empty size
+	setting functions to match those in net.h.
+
+Mon Dec  8 17:55:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* CELL_shtring_cursor (cells-def.h): changed the DECLARE_PTR
+	for the field that points at the shtring the cursor points at
+	to a DECLARE_NONNULL_PTR, since it isn't ever allowed to be
+	NULL.
+	
+	* shtring_intern (shtring.c): Added comment about potential
+	need for an error return when counter grows too big. Now handled
+	via an assert.
+	
+	* shtring_cmp_new (shtring_cursor.c): Fixed comparison bug that
+	was due to byte-order differences between reality and my brain.
+	I'd confused myself with how bytes were ordered in memory when
+	they were stored (portably) with the first byte in a string as
+	the most significant byte of a word.
+
+Thu Dec  4 05:16:44 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_tpcb.s (_create_account#1): Bugfix.  Had declared a too
+ 	small stack frame.
+
+Fri Nov 28 12:45:46 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_access_method.c (do_perform): Implemented. A performance
+	test which inserts a new key and deletes an existing one.
+
+Wed Nov 26 14:34:57 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_sysm.c (trans_found): Fix: The sixth argument of
+	`triev2_delete' is now NULL_WORD.
+
+	* test_access_method.c: Added support for `avl' and `ist234'.
+
+Tue Nov 25 17:45:45 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_access_method.c (do_delete): Implemented. Performace test
+	for key deletions. The user should insert "enough" keys using the
+	program argument `number_of_keys' before starting deletion.
+
+Tue Nov 25 15:24:22 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* lq.c (lq_remove_first): Tested. Seems to work now.
+
+Mon Nov 24 18:29:54 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* Started to implement logarithmic queue (lq) operations. 
+	
+	lq.[hc] (lq_insert_last): Wrote and compiled. Seems to work now.
+	(lq_remove_first): Wrote and compiled. Doesn't work yet when
+ 	tested.
+	
+Mon Nov 24 13:31:31 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Makefile.in: Added `$(LONELYSRCS)' to `$(DISTFILES)'.
+
+Sun Nov 23 14:03:25 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_access_method.c (do_test): Made minor modifications in the
+	output format.
+
+Sat Nov 22 12:24:46 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_access_method.c (do_test): Added warming-up feature to the
+	test driver. The database can now be "warmed-up" before starting
+	a performance test by giving the the command line argument
+	`duration' as "warm-up time+test time". For example, "10+30" means
+	that the driver warms-up the database for the first 10 seconds and
+	runs the performance test for the next 30 seconds.
+
+Fri Nov 21 18:27:40 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_access_method.c: Added functions to test the speed of
+	insertions of various access methods.
+
+	* root-def.h (test_xm): Added.
+
+Fri Nov 21 10:47:19 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+        * Splitted test functions of `test_avl.c' up into two files:
+ 	`test_bc_avl.c' contains test functions for byte code
+ 	operations, and `test_avl.c' contains test functions for
+ 	ordinary AVL-tree operations.
+
+Thu Nov 20 17:24:02 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* Makefile.in (TESTPROGS): Added target `test_access_method'.
+
+	* params-def.h: Added new parameters `test_access_method_name'
+	and `test_access_method_type'.
+
+	* test_access_method.c: Wrote.
+
+Tue Nov 18 12:16:57 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* insn-def.h (net_read_shtring): bug fixed: when saving the
+	current state after allocation error, now reduces the number
+	of wanted bytes (sp[-2]) correctly.
+
+Mon Nov 17 23:29:13 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* interp.c (interp): Use a long timeout for
+ 	`net_number_of_wakeups' only when there's nothing imperative to do
+	(only blocked or lowest priority threads).
+
+	params-def.h (usecs_for_network_select_when_idle): Added, default
+	to 1ms.
+
+	* insn-def.h (list_append): Wrote.  An incredibly inspirationally
+ 	instructive instruction.
+
+Sun Nov 16 18:24:14 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* params-def.h (disk_filaneme): Defaults now to `/dev/null'
+ 	instead of `/test-atlas1'.
+
+Sun Nov 16 17:32:25 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c (release_buffer): bug fixed: used to free the last
+	chunk twice because the `next' pointer was changed by
+	`free_buf_chunk'.  Doesn't compare pointers anymore but
+	rather the buffer size.
+
+	* net.c (net_get_wakeup): clears the file descriptor from
+	both the return and the original sets now.  This way
+	`net_number_of_wakeups' can be called several times and only
+	one wakeup is returned.
+
+Fri Nov 14 15:26:08 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* interp.c (interp): Renamed `FLUSH_AND_RERUN_CONT' to
+ 	`FLUSH_AND_RETRY_CONT'.
+
+Fri Nov 14 15:15:07 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* insn-def.h (net_{read,write}_shtring): Wrote.
+
+	* test_net_shtring.s: Checked in.  This is a version of test_net.s
+	that uses shtring instead of single characters, but otherwise
+	just the same.
+
+Fri Nov 14 12:50:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.c: shtring_fprint doesn't print an asterisk instead
+	of non-printable characters any more. Also switched the order
+	of the arguments.
+
+Thu Nov 13 22:02:57 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* asm.c (asm_string_{start,char,end}), asm_defs.h, asm_lex.l,
+ 	asm_parse.y: If insns are given string constants as arguments,
+	intern them and use the interned value until `load_bcode'.
+	
+	interp.c (load_bcode): Added code to replace interned string ids
+	with pointers to the s(h)tring.
+	
+ 	insn-def.h (load_imm_string): Wrote.
+	
+	insn-def.h (t_print): Don't print a newline any more.  It should
+	be done by printing a string constant that contains a newline.
+
+	cells.c (tagged_fprint): Minute changes.
+
+Wed Nov 12 14:12:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.c (shtring_intern): Converted to use triev2, instead of trie.
+	* shtring.c (shtring_lookup_by_intern_id): Wrote.
+	* shtring.c (shtring_cmp_without_allocating): Wrote a slow version.
+
+Tue Nov 11 17:42:50 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* interp.c (interp): Fixed can_allocate arg. from trie to triev2
+ 	macros.  Some minor improvements.
+
+Mon Nov 10 14:23:40 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* insn-def.h (t_print): Modified to print a newline after a
+	`tagged_print' call.
+
+	* cells.c (tagged_fprint): Modified to print lists and shtrings.
+
+Sun Nov  9 21:48:40 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_reverserver.s: Removed from under RCS.
+	
+	README, AUTHORS: Associated changes.
+
+Sun Nov  9 17:52:55 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: Changed the network API to use special handles
+	of type `net_handle_t' rather than actual file descriptors.
+	NOTE: these handles are not returned back to the caller
+	as file descriptors used to be.
+
+	* net.c: Changed internal error handling to destroy connections
+	on fatal errors.  `net_close' should no longer be closed if
+	a fatal error is returned.
+
+	* net.c (net_read_shtring): Changed to take a shtring as
+	additional argument.  The shtringified data is concatenated
+	after the given shtring.
+
+	* net.c (make_shtring): Changed to comply with the above.
+
+	* insn-def.h (net_listen, net_accept, net_read_char,
+	net_write_char, net_close): Changed to jump to the given label
+	on fatal errors.  Changes also in arguments and return values
+	(see insn-def.h for documentation on these).
+
+	* test_net.s: Changed to comply with the new versions of
+	networking byte code instructions.
+
+	* net.c: Bug fixed: when reading a buffer, read chunk was
+	changed to the next chunk in the list after the read operation,
+	which caused moving to wrong chunk.  Fixed to be symmetric
+	with buffer writes (check moving to next chunk just before
+	read operation).
+
+Sun Nov  9 03:15:38 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* cells-def.h (list): Fields are now TAGGED instead of PTRs.
+
+	* insn-def.h: `t_branch_if_not_true' was mystiquely defined
+	twice.  Fixed that.  
+
+	Also made a version `r_cons' of `cons'.  `r_cons' takes its
+ 	arguments in reverse order on stack (car in accu, cdr on top of
+ 	stack), making it more amenable to the right to left -order of
+	execution in Nolang (which in turn saves memory).
+
+Sat Nov  8 00:00:05 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h: Wrote insns `t_branch_if_not_cons',
+	`t_branch_if_not_null', `load_null'.  "Nolang-approved" the insns
+	`cons', `car', and `cdr'.
+
+Fri Nov  7 16:22:22 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* insn-def.h: Added instructions `t_add/sub/mul/lshift/rshift/_imm'
+	and `t_print'.
+
+	* cells.[hc] (tagged_fprint): Wrote.
+
+Thu Nov  6 01:25:52 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* interp.c (flush_bcode_cache, init_interp): Fixed a bug caused by
+ 	the change of the invalid-interned-string-id -value from 0 to ~0.
+  	Now inits the bcode cache correctly.
+
+Tue Nov  4 12:27:21 1997  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* kdqtrie.c: 'kdqtrie_check_integrity', 'kdqtrie_display_path',
+	and 'kdqtrie_display_stat' added.
+
+Fri Oct 31 17:30:23 1997  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* kdqtrie.c: fixed 'compare_long_prefix_and_key'.
+
+Thu Oct 29 05:20:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.[ch], shtring_cursor.c, shtring_internal.[ch]:
+	Re-implemented shtring cursors. They should mostly work now, but
+	still need testing, tweaking, and debugging.
+	
+	* Makefile.in: Related changes.
+
+Mon Oct 27 12:59:02 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb_avl.c (item_cmp): Bug fix: The third argument `context'
+	is now compared correctly to `NULL' instead of `NULL_PTR'.
+
+	* test_tpcb_ist234.c: TPC-B test for 234-trees. Wrote.
+
+	* Makefile.in (TESTPROGS): Added target `test_tpcb_ist234'.
+
+Sat Oct 25 16:51:46 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* ist234.c (ist_234_find_min, ist_234_find, ist234_insert):
+	Tested, seems to work now.
+	
+Sat Oct 25 16:18:54 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* README: Added a little not on cross compiling Shades.
+
+Fri Oct 24 00:22:11 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (t_cmpeq, t_cmpne, t_cmplt, t_cmple, t_cmpgt,
+ 	t_cmpge, t_not, t_branch_if_false, t_branch_if_true): Renamed by
+	prefixing a `t_' to corresponding old insns.
+
+Thu Oct 23 19:27:24 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (cmpeq, cmpne, cmplt, cmple, cmpgt, cmpge, not,
+ 	branch_if_true): Wrote.
+
+Thu Oct 23 17:58:00 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* ist234.c (ist234_find, ist234_insert) : Wrote, and
+	compiled. Didn't test yet. 
+
+Thu Oct 23 17:52:30 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* insn-def.h: Added tagged versions of
+	`cond_{eq,le,lt}_pick/imm_pick/imm' instructions.
+
+Thu Oct 23 02:00:44 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* includes.h: Added definition of `signed_word_t'.
+
+	* insn-def.h (TAGGED_TO_SIGNED_WORD, SIGNED_WORD_TO_TAGGED,
+	t_mult, t_div, t_mod): Wrote.
+
+Wed Oct 22 17:26:50 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (branch_if_false): Wrote.
+
+	insn-def.h: Moved branch insns to the set of Nolang's insns.
+
+Wed Oct 22 12:09:56 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_sysm.c: Adopted `triev2'. Old trie-functions have been
+	replaced with new triev2-functions.
+	(update_acc_used_crd): Bug fix: Modified to use correct record
+	length during data copying.
+
+Mon Oct 20 18:58:36 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* asm.c, interp.c, test_asm.c: Changed to use triev2 instead of
+ 	old trie routines for the mapping from bcode id's to bcode ptrs.
+
+	* insn-def.h: Moved insns `push', `pick', and `return', and wrote
+	insns `t_load_imm', `t_add', and `t_sub'.
+
+	* asm_parse.y, asm_defs.h, asm.c (asm_push_stack_item_type,
+ 	asm_set_max_stack_depth, asm_set_escaping): Changed the
+ 	`.stack'-directive's syntax to allow holey stacks.
+
+	test_fib.s test_mergesort.s test_net.s test_primes.s
+ 	test_reverserver.s test_tpcb.s test_ulam.s: Associated changes.
+	
+	* asm.c, cells-def.h (context, cont): Allow any word
+ 	type in the stack description.
+
+	* asm.l: Recognize TAGGED and NONNULL_PTR.
+
+	* interp.[hc] (interp), root-def.h (suspended_accu,
+ 	suspended_accu_type), insn-def.h (spawn): accu can now be any word
+ 	type.
+ 	
+	shades.c (major_gc_step, collect_first_generation): Associated
+	changes so that garbage collector determines the word type of accu
+	correctly.
+
+	asm.c, asm_defs.h (asm_set_accu_type): Allow any word type
+ 	declaration for accu.
+
+Sat Oct 18 20:39:08 1997  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* root-def.h: C++ view added.
+
+Thu Oct  9 14:38:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* cells-def.h: Added cell type shtring_cursor. Will add the
+	code to use the cell type later.
+
+Tue Oct  7 11:44:49 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: (net_write_shtring): Wrote, compiles, but not
+	tested yet.  Like `net_write_mem', but takes data from a shtring
+	rather than memory area.
+
+	* net.c: (shtring_to_buffer): Wrote, compiles, but not tested
+	yet.  Helper function for `net_write_shtring', symmetric to
+	`copy_to_buffer'.
+
+Mon Oct  6 13:53:16 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* triev2.c (triev2_find_at_most) : Tested. Seems to work now.
+
+Sat Oct  4 22:12:21 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: (net_read_shtring): Wrote, works like `net_read_me',
+	but makes a shtring from the data rather than copying it
+	somewhere.  Compiles, but hasn't been tested yet.
+	New error types NET_ALLOCATION_ERROR and NET_SHTRING_ERROR
+	introduced for this function, as well as new field `shtring'
+	to `net_return_t'.
+	
+	* net.c: (make_shtring): Wrote, symmetric to `copy_from_memory',
+	but shtringifies the data.  Compiles, not tested yet.
+
+	* net.c: Wrote `init_buffer' and changed `allocate_buf_chunk'
+	to `insert_chunk_before'.  The two functions combine much
+	of the work previously done in `copy_{to,from}_buffer',
+	`read_to_buffer', and `write_from_buffer'.  Compiles, and works
+	in initial quick test.
+	
+
+Fri Oct  3 18:21:54 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* triev2.c (triev2_find_at_most) : Wrote, compiled, and tested.
+	Doesn't work yet.
+
+Thu Oct  2 15:06:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring_internal.{c,h}: Created. Moved internal functions from
+	shtring.c and renamed them.
+	
+	* Makefile.in: Related changes.
+
+Sun Sep 28 01:11:22 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* triev2.[hc] (triev2_find_quick): Wrote.
+
+	Moved assertion routines to the end of the file.
+
+Fri Sep 26 12:01:02 1997  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* avl.[ch]: IS_INTERNAL_NODE moved from avl.c to avl.h.
+
+Thu Sep 25 13:18:12 1997  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* cells.h: Changed the context parameter of `cmp_fun_t' from
+ 	`ptr_t' to `void *' as it suits better C-callers.
+
+	avl.[hc], priq.[hc], test_avl.c, test_tpcb_avl.c, test_priq.c:
+ 	Associated changes.
+
+Tue Sep 23 04:00:01 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* README: A few minor updates and additions.
+
+Mon Sep 22 03:21:02 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Made a distribution called `shades-2.4beta'.  It does not
+ 	contain any code related to Nokia's kdqtrie or antree.
+
+	* configure.in (CFLAGS): Removed `-pipe', apparently not supported
+	on IRIX gcc.
+
+	* asyncio-dummy.c, asyncio-posix.c (asyncio_get_file_load,
+ 	asyncio_reduce_file_load): Wrote these dummy functions so that
+ 	linking wouldn't fail.
+
+	* Makefile.in (OTHERFILES): Added `cells-def-prep.h'.
+
+Sun Sep 21 19:15:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.c: Added more descriptive comments.
+
+Sat Sep 20 22:12:31 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: Improved documentation.  Removed cast operator
+	from malloc and realloc calls.
+
+	* Makefile.in: Added `test_net.s' to TESTASMS.
+
+	* configure.in: Added "-D_REENTRANT" to CFLAGS when using
+	pthread io.
+
+Thu Sep 18 15:39:18 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* configure.in (XOPTCFLAGS): Added case for vanilla i386.
+
+	* test_tpcb_triev2.c (tpcb_do_one_transaction): Calls to
+ 	`triev2_{insert,replace,delete}' inside ifdefs.  Choose the one
+ 	that suits you best.
+
+	* triev2.c (triev2_delete): Optimized the cell copying with a
+	simple decision tree on the cell size.  Dropped CPU-consumption
+	from 523 to 500 cycles.
+
+	* triev2.[hc] (triev2_replace): Wrote.  This performs
+	replacement on average in 327 Alpha CPU cycles, but can not be
+	used if the key is not present.
+
+	* triev2.[hc], oid.c, test_triev2.c, test_tpcb_triev2.c,
+ 	test_gc.c: Added context parameter to the update functions.
+	Related changes elsewhere.
+
+Wed Sep 17 23:31:32 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* triev2.c (triev2_delete): Further micro-optimizations dropped
+ 	CPU consumption from 547 to 523.  Got rid of macro I_TO_CELL_TYPE.
+
+	triev2.h: Added comment about when to use `triev2_insert'
+ 	vs. `triev2_delete' when the same effect can be obtained by either
+ 	one.
+
+Tue Sep 16 22:10:18 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* triev2.c (triev2_delete): Numerous micro-optimizations which
+ 	reduced the average CPU consumption from 670 to 547 Alpha 21164
+ 	cycles as measured by pixie.  In particular the case of actually
+ 	removing a subtree is handled separately from the rewriting of the
+ 	path to the root, and the copying of the old cell is manually
+ 	unrolled.
+
+	A handful of cleanups.
+
+Tue Sep 16 17:04:09 1997  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* triev2.c (triev2_make_assertions): Don't traverse the tree
+ 	unless first_generation_assertion_heaviness >= 10.
+
+	* smartptr.h: Changed the pointer type from ptr_t to word_t.
+	
+	shades.c (collect_first_generation, major_gc_step): Fixed the
+ 	traversal of the smart pointer ring.
+
+Tue Sep 16 12:20:25 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* asyncio-pthread.c: a couple of minor cleanups.
+
+Mon Sep 15 13:13:19 1997  Jukka-Pekka Iivonen  <jiivonen@dionysos.cs.hut.fi>
+
+	* triev2.c (make_assertions): Commented out the assert that the
+ 	stored item is a `CELL_word_vector'.
+
+Sun Sep 14 23:49:23 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* asyncio-pthread.c, asyncio.h, io.c: fixed the file load
+	balancing to use the queue correctly.  Changed timer to
+	`gettimeofday' for actually usable values.  Added artificial
+	load reducing to give slow disks another chance after a reasonable
+	time.
+
+	* asyncio-pthread.c: added disk usage statistics.  Reasonable
+	only when balancing is used, to see which disks are actually
+	used and how much.
+
+	* configure.in: added --enable-switches `file-load-balancing'
+	and `file-usage-statistics' to enable the obvious features.
+
+	* params-def.h: added `file_load_is_displayed' and
+	`file_usage_is_displayed' for verbosity options for load
+	balancing and usage statistics.
+
+Wed Sep 10 15:54:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.c: Make `monkey' be able to climb the tree right-to-left
+	in addition to left-to-right. Changed shtring_trim_trailing to make
+	use of this, which speeds it up a bit.
+
+Tue Sep  9 18:41:46 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* configure.in: Moved the tests related to `--enable-warnings'
+	before tests for compiler characteristics.
+	
+	Disabled using `config.cache' altogether.  The speedup was
+ 	negligible and it could occasionally result to inconsistencies
+	because some system-wide test results actually depend on
+	e.g. `--enable-warnings'.
+
+Tue Sep  9 17:20:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* Makefile.in: `realclean' now removes cells-def-prep.h.
+
+Tue Sep  9 16:40:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.[ch]: Added shtring_trim_trailing, which removes
+	trailing whitespace from a shtring.
+	
+	* test_shtring.c: Related changes.
+
+Tue Sep  9 14:57:21 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.h: Don't compile some gcc-related definitions if
+ 	`__STRICT_ANSI__' is defined.
+
+	* shades.c: Include `smartptr.h'.  Scan the smart pointer chain in
+ 	`major_gc_step'.
+
+	* smartptr.h: New file.
+
+	Makefile.in: Respective changes.
+
+Wed Sep  3 13:13:47 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* README: A handful of updates.
+
+Tue Sep  2 11:00:24 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* asyncio-pthread.c (writer_thread, asyncio_get_file_load):
+	Created a simple prototype for load balancing.
+
+	* io.c: New macro FIXED_ROOT_DISK to determine on which disk
+	root should be written to.
+
+	* io.c: Wrote new disk page allocation loop for load balancing.
+
+Sun Aug 24 23:41:28 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* asyncio-pthread.c: Changed locking/syncrhonization scheme
+	from using sempahores to using pthread condition variables
+	and mutexes.
+
+	* shades.c (rvy_read_generation): Changed to use asynchronous
+	reads if available.
+
+	* configure.in: Removed requirement for semaphores as obsolete,
+	added check for `pthread_create' in libc_r to recognize location
+	of pthread-functions in FreeBSD.
+
+Sun Aug 24 21:18:39 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_gc.c: Changed to use the new triev2 instead of the old trie
+	routines.
+
+Wed Aug 20 12:24:30 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (major_gc): Added a call to `io_allow_page_changes' if
+ 	doing a second or later `major_gc_step' during the same commit
+ 	group.
+	
+	* io.[hc] (io_allow_page_changes): Wrote.  Calls directly
+ 	`asyncio_drain_pending_writes' now.
+
+Tue Aug 19 13:15:05 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* asyncio.h: additional documentation, added a couple of missing
+	function prototypes, minor cleanups.
+
+	* asyncio-pthread.c: minor cleanups.
+
+	* configure.in: --enable-{posix,pthread}-io to select
+	preferred asynchronous IO directly.
+
+Thu Aug 14 12:57:32 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* asyncio-pthread.c: Some locking bugs fixed, changed
+	`drain_pending_{reads,writes}' to loop through 0 to
+	the amount of pending writes before last drain instead
+	of checking for emptiness of the queue.  Fixed asynchronous
+	reads to be symmetric with writes.
+
+Wed Aug  6 17:19:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.[ch]: Cleaned up a little bit based on review comments
+	by Siva. No functional changes, but some function return types
+	have changed.
+
+Mon Jul 28 14:24:16 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* io.[ch], asyncio-{dummy,posix,pthread}.c, asyncio.h:
+	Added support for asynchronous reads.  Thread-implementation
+	re-checked, fixed queue handling and locking.
+
+Mon Jul 28 14:20:08 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* params.c (verify_integer_format): Fixed to support the following
+	integer formats: `0M' and `0.5k'.
+
+Fri Jul 25 18:56:09 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* configure.in: Added `-pipe' to CFLAGS if using gcc.  This might
+	improve compilation times slightly.
+
+Thu Jul 24 07:42:52 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* configure.in: More tweaking with compiler flags.
+
+Wed Jul 23 11:16:22 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* io.c, asyncio-{posix,pthread}.c: cleanups, some additional
+	comments, minor fixes.
+
+	* io.c, params-def.h: disk file sizes are now controlled with
+	parameter `disk_filesize' which contains a ',' separated
+	list of sizes in the same order as `disk_filename' contains names.
+	Postfixes 'M' and 'k' recognized.  `disk_to_db_size_ratio' removed
+	as obsolete.
+
+Tue Jul 22 16:02:21 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Minor changes in several files in order to keep some vendor
+	compilers a little happier.
+
+	* Makefile.in: Avoid passing excess flags unless we have gcc.
+  	Don't pass excess flags when profiling or debugging.  Minor
+ 	related reorganizations.
+
+Mon Jul 21 11:15:14 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* configure.in: Fixed the `AC_CHECK_LIB' call for `libaio.a'.
+
+	README: Started a list of site-specific problems, added a tag for
+ 	alpha-dec-osf4.0.
+
+	* AUTHORS: Updated and vc-registered.
+
+Tue Jul 15 12:00:15 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: (copy_to_buffer): bug fixed: `buffer->write_postion'
+	was changed instead of `wp', now changes `wp'.
+
+	* net.[ch], params-def.h: buffering changed from variable
+	sized buffer chunks to fixed size.  Buffer chunk size is now
+	determined by parameter `buffer_chunk_size'.
+
+	* net.[ch]: (copy_to_buffer, read_to_buffer): bug fixed:
+	number of bytes to copy/read was determined before possible
+	switch to next buffer chunk.  Now check after the possible
+	switch, as it should be to get the right number of bytes to
+	copy/read.
+
+Sun Jul 13 22:29:04 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* triev2.c (triev2_make_assertions): Added integer value 1 as its
+	return type since it is used in assertions.
+
+Sun Jul 13 18:51:43 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* asyncio*.[ch], io.c: changed prefix of our own asynchronous
+	IO calls from `aio_' to `asyncio_' to solve yet more naming
+	conflicts.  Note: system calls prefixed `aio_' or `aio' are
+	not changed.
+
+Sat Jul 12 14:27:53 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Makefile.in: $(TESTOBJS) were accidentally archived in
+ 	`libshades.a', fixed.
+
+Thu Jul 10 15:59:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* params.c: Changed a types from `int' to `size_t' to silence
+	compiler warnings about comparisions between signed and
+	unsigned integers.
+
+Thu Jul 10 12:19:51 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* renamed aio*.[ch] to asyncio*.[ch] to solve a naming
+	conflict between shades' aio.h (now asyncio.h) and system
+	aio.h.  Affected files Makefile.in, configure.in, and io.c.
+
+Wed Jul  9 20:12:42 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Makefile.in: Complete restructuring of the source file
+ 	definitions.  Removed targets `wc' and `wc-semi'.
+
+Wed Jul  9 18:57:28 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* aio-posix.c: renamed `struct aiocb's to `aiocb_t's.
+
+Wed Jul  9 18:47:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.c (shtring_trim_leading): Wrote.
+	
+	test_shtring.c: Related changes.
+
+Tue Jul  8 23:37:43 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* configure.in: ok, so AC_CHECK_HEADERS checks for at least one
+	of the arguments given, not all.  Fixed "--enable-async-io"
+	-section when pthread.h is found but semaphore.h is not.
+
+Tue Jul  8 19:02:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.c (monkey): Callback function now gets offsets into
+	the interesting part of the string as arguments, instead of just
+	chunk offset.
+	
+	Also related changes elsewhere.
+
+Tue Jul  8 13:21:44 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* triev2.c (triev2_delete): Removed a bug that left loop-variable
+ 	`level' uninitialized because the forward-movement of
+	goto-statement from outside of the loop in the first round.
+
+Tue Jul  8 11:54:24 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* io.c: split into io.c containing the IO system skeleton
+	and synchronous IO, and aio.c containing asynchronous IO.
+
+	* aio_{pthread,posix}.c: cut&pasted from original io.c.
+	configure now chooses the correct implementation for
+	asynchronous IO and symlinks one of these files to aio.c.
+
+	* Makefile.in, configure.in: additions to "--enable-async-io"
+	-section to support above configuring.  New rule for "aio.c".
+
+Mon Jul  7 22:08:24 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* oid.[hc] (oid_allocate): Thorough rewrite of the oid allocation
+ 	algorithm, this time its design is supported by extensive
+ 	experimentation.
+
+	root-def.h (oid_in_use, oid_prev_random): Related additions.
+
+	test_oid.c (do_oid_allocations): Instrumented the code to produce
+	useful statistics on the oid_map and oid allocation density.
+	
+Mon Jul  7 16:09:20 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb_avl.c (item_cmp): Optimized to use already allocated
+	record vectors to compare keys instead of using separate key vectors. 
+	Made related changes elsewhere.
+
+Thu Jul  3 15:40:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* includes.h: Added #ifndef/#endif around alloca definition,
+	so that it will compile without warnings. Linux stdlib.h
+	defines alloca by default, unless strict standard conformance
+	is required.
+	
+	This probably needs to be fixed in a cleaner way some day.
+	Cessu?
+
+Thu Jul  3 20:22:19 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Makefile.in: Added `install-sh' to variable `SCRIPTS'.
+
+Wed Jul  2 17:54:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.c: Added shtring_to_long and shtring_to_ulong functions.
+
+	shtring.h, test_shtring.h: Related changes.
+
+Wed Jul  2 16:06:54 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_oid.c (do_oid_allocations): Altered output format in order
+	to display also the value of `oid_max' (maximum number oids
+	allocated). 
+
+Tue Jul  1 15:17:07 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_oid.c (main): Bugfix.  Didn't call `create_db' before
+	commencing transactions.
+
+	* triev2.c (triev2_find_nonexistent_key): Bugfix.  Returned the
+ 	shifted key, which gave incorrect results when `key_length < 32'.
+
+	* triev2.c (triev2_delete): Undocumented bugfixes by Sirkku.
+
+Mon Jun 30 18:11:39 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* oid.c: A few bugfixes now that I was able to do some tentative
+ 	testing with it.
+
+	* triev2.c (triev2_find_nonexistent_key): Since it was apparently
+ 	buggy, I rewrote the latter part of the function.  Introduced
+ 	`first_nonexistent_key[15]'.
+
+	* triev2.c: Bugfix when key_length < 32.  Added shifting off the
+ 	insignificant bits in the key.
+
+	* triev2.c (triev2_insert): Bugfix.  Added initialization of
+ 	`old_data' to `NULL_WORD'.
+
+Mon Jun 30 16:25:13 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_oid.c: Missing `can_allocate' call added to the oid
+	deletion code. Various minor cleanups. Added comments.
+
+Mon Jun 30 13:22:45 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* triev2.c (triev2_*): Added assertion `key_length > 0' in the
+	beginning of each operation.
+
+	(triev2_make_assertions): Wrote, compiled and tested. This
+ 	function is used by `test_triev2'. It asserts that:
+ 	1) every internal node is some of `CELL_trie*'s, 
+	2) every leaf node is `CELL_word_vector', and that  
+	3) paths from root to leaf are consistent.
+	
+Fri Jun 27 16:58:07 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* triev2.c (triev2_delete): Wrote, compiled and tested. Seems to
+	work now. Didn't optimize yet. 
+
+Fri Jun 27 16:30:03 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_oid.c: A benchmark test for object identity (oid)
+	allocation. The program has not been tested yet.
+
+	* Makefile.in (TESTPROGS): Added target `test_oid'. 
+
+	* oid.h: Added `triev2.h' into include-list.
+
+Thu Jun 26 16:31:42 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_sysm.c (str_to_shtr): Made minor optimization using the 
+	following fact: if preceding `can_allocate' call succeeds,
+	`shtring_create' never returns zero. 
+
+Thu Jun 26 11:09:35 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* oid.[hc]: New files with the functions `oid_allocate',
+ 	`oid_dispose', `oid_ref', `oid_update', and `oid_init'.  Smart oid
+ 	allocation strategy has been implemented, but not yet oid caching.
+  	Compiles, but can't test until `triev2_delete' works.
+
+	Makefile.in: Related changes.
+
+	root-def.h: Added fields `oid_map', `oid_freelist', `oid_max', and
+	`oid_allocation_cursor'.
+
+	shades.c (flush_batch): Clear the `ROOT_oid_freelist' immediately
+	in the beginning of group commit processing.
+
+	* cells.h: Added macro `TAGGED_IS_OID'.
+
+	* cells.c (init_cells): Added, if being verbose, printing of the
+	number of cell types in use. 
+
+Wed Jun 25 19:36:49 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Makefile.in (.depend): Added $(TESTSRCS) to the dependents and
+	input files.
+
+	* triev2.c (triev2_delete): There's no need for keeping the
+	allocation point now that we allocate new cells only after the
+	delete-condition check has been done (and acted on).
+
+	* triev2.[hc]: Data (and respectively update functions) now use
+ 	TAGGED (`word_t's), not PTRs (`ptr_t's).  This required somewhat
+ 	extensive, though slightly repetitive changes in all
+ 	triev2-routines.
+
+	test_tpcb_triev2.c, test_triev2.c: Related, even more extensive
+	and repetitive changes.
+
+	* cells.h: Added macros `TAGGED_IS_PTR' and `TAGGED_IS_WORD'.
+
+	cells.c, shades.c: Use the above macros.
+
+	* triev2.[hc]: Give `key_length' as an additional argument, not
+ 	necessarily 32, but at most 32.
+
+	(triev2_find_nonexist): Renamed to `triev2_find_nonexistent_key'.
+
+	test_tpcb_triev2.c, test_triev2.c: Related changes.  (Always uses
+ 	32-bit keys even if fewer bits would suffice.)
+
+Wed Jun 25 18:31:05 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* triev2.[hc] (triev2_find_nonexist): Wrote, compiled and
+	tested. Seems to work. 
+
+Tue Jun 24 19:22:12 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* cells-def.h: Changed all triev2's cell types to use TAGGED
+ 	instead of NONNULL_PTR.  A little benchmarking showed ~1% drop in
+ 	CPU-efficiency, but it'll be worth it.
+
+	* shades.[hc], cells.[hc], cells-def.h: Added the new word type
+ 	`DECLARE_TAGGED'.
+
+	* run_tpcbs: Can now present results relatively to the first
+ 	command in the command file.  (Essentially a redesign of the
+	result processing loops.)
+
+	If given flag `-reuse', then don't rerun the commands, but assume
+ 	they have already been run in a previous invocation of `run_tpcs'.
+
+Thu Jun 19 16:51:47 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_sysm.c: Removed string_intern functions and adopted
+	shtring routines instead for handling variable length strings.
+
+Thu Jun 19 10:20:29 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shtring.h (shtring_intern_result_t): Defines now also the type,
+ 	not only the struct.
+
+	* asm_lex.l, interp.c, test_asm.c: Changed to use the new
+ 	`shtring_intern' instead of the old `string_intern'.
+
+	test_sysm.c: Removed the useless inclusion of `string_intern.h'.
+
+	root-def.h: Renamed `interned_strings' to `interned_shtrins' and
+ 	removed the now useless counter `number_of_interned_strings'.
+	
+	* string_intern.[hc], test_string.c: Removed from under RCS.
+
+	cells-def.h (string_id_list): Removed this cell type.
+
+	Associated changes in `Makefile.in'.
+
+Wed Jun 18 22:25:38 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* params-def.h: Minor tweaking with the default params.
+
+	* triev2.c (triev2_insert): Extensive CPU-optimizations which have
+ 	apparently speeded up the routine by almost 35% (including the
+ 	gains from using the additional optimization flags described
+ 	below).  Experiments show that `triev2_insert' is now more
+ 	efficient than its old counterpart in all cases.
+
+	* configure.in: Added some gcc optimization flags for iX86 where
+ 	X >= 4.  If your `./configure --enable-speed' gives pessimistic
+	processor version (i386), then give also the option
+	`--target=i486' to `configure'.
+
+	(config.sub, config.guess, install-sh): Copied these files from
+	autoconf distribution.
+
+	* triev2.c (triev2_insert): Minute changes in the interface:
+
+	If the key is not yet in the trie, it will be inserted regardless
+ 	of whether `f' is given.  `f' won't even be called in such cases.
+
+	`data' may not be `NULL_PTR'.
+
+	* Makefile.in: Handling of conditionally used library sources
+	(memmove.c, random.c and alloca.c) was inconsistent.  Unified and
+ 	introduced a new variable `USEDSRCS' which is used, e.g. in target
+	`.depend'.
+
+Wed Jun 18 18:27:15 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb_avl.c (insert_records, print_table): Added `avl_find'
+	calls for debugging.
+
+Wed Jun 18 18:25:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.c, shtring.h: Added function shtring_create_max_allocation.
+	Callers of shtring_create must now do can_allocate themselves.
+	
+	* test_shtring.c: Related changes.
+
+Tue Jun 17 17:12:08 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb_avl.c: TPC-B test for avl-trees.
+
+	* Makefile.in (TESTPROGS): Added target `test_tpcb_avl.c'.
+
+Wed Jun 11 15:57:24 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* triev2.c (triev2_insert): Wrote, compiled, and tested. `triev2'
+ 	is now like old trie, but with new feature: breadthwise
+ 	compression.
+
+Tue Jun 10 15:23:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.c, shtring.h: Minor tweaking an cleaning up. Now
+	ready for code review.
+
+Tue Jun  3 18:10:56 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Makefile.in: `.depend' is also a PHONY target.
+
+Mon Jun  2 15:54:17 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* cells-def.c: Defined some pointers in cell types be
+	NONNULL_PTRs. 
+
+	Replaced cell types trie0, trie1, trie2, ...
+	by trie1234, trie123, trie124 and so on. Now the number tells which
+	pointers in `p' (p[1], p[2]), are in use e.g. != NULL_PTR.
+
+Fri May 30 18:01:43 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (call_self, call_self_with_cont_as_ptr,
+ 	tail_call_self): Added.
+
+	asm.c (asm_finish_bcode): Added a peephole optimization to produce
+	`call_self_with_cont_as_ptr'.
+
+	test_primes.s, test_ulam.s, test_mergesort.s: Changed to use the
+	new insns.
+
+	Current bchodestone results:
+                test            2.3     new     improvement
+                fib             17.81   16.22   9.80%
+                primes          10.81   10.67   1.31%
+                ulam            14.23   14.03   1.43%
+                mergesort       31.89   31.22   2.15%
+                tpcb            48.39   47.83   1.17%
+
+	* insn-def.h (call_with_to_as_ptr, call_with_cont_as_ptr,
+ 	call_with_to_as_ptr_and_cont_as_ptr): Added.
+
+	asm_defs.h: Removed the `previous'-field of `asm_insn_t' and added
+ 	`ASM_PTRED' to `asm_insn_t.type'.  Associated changes in various
+ 	places in `asm.c'.
+	
+	asm.c (asm_finish_bcode): Partial rewrite.  Added a peephole
+ 	optimization which tries to grok pointers to already defined
+ 	bcodes and use them as immediate fields.
+
+	test_fib.s test_mergesort.s test_primes.s test_tpcb.s test_ulam.s:
+ 	Reordered bcodes so that the peephole optimizer can use the new
+ 	insns.
+
+	Bchodestone improvement over distribution shades-2.3alpha:
+                test            2.3     new     improvement
+                fib             17.81   16.24   9.67%
+                primes          10.81   10.67   1.31%
+                ulam            14.23   14.06   1.21%
+                mergesort       31.89   31.69   0.63%
+                tpcb            48.39   47.89   1.04%
+
+	* io.c (io_write_root): Restored the second call to `fsync'.  It
+ 	causes no overhead in Linux or most other OSes, but it may be
+ 	risky to leave it out.
+
+	* Makefile.in: `cells-def-prep.h' depends now on `insn-def.h'.
+
+	* shades.c, cells.c: Include `dh.h' instead of `dyn_hash.h'.
+  	Removed files *dyn_hash* from under RCS.
+
+Fri May 30 14:55:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.c: Shtring interning works, at least in trivial cases.
+	
+	* test_shtring.c: Added trivial testing for interning.
+
+Fri May 30 10:08:45 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* Renamed files: replaced dyn_hash in file names by dh.
+	Deleted files `*dyn_hash*'.
+	
+	* dyn_hash.h: Removed `LOG_ICS'. That macro is replaced by
+	`DO_LOG2', which is defined in `bitops.h'. 
+
+	All you have to do now when changing size of internal node (e.g
+	number of pointers to subtrees in it) is to
+	redefine macro `INTERNAL_NODE_SIZE'. Remember it must be power of 2.
+
+	* cells-def.h: Inserted 15 new cell-types: trie0, trie1,...,
+	trie14. 
+	
+Thu May 29 09:46:34 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* cells-def.h (bcode): Fixed a bug in treating push-melded insns.
+	They do _not_ advance the pc.
+
+	* Makefile.in: Target `cells-def-prep.h' is now made before target
+ 	`depend'.
+
+Wed May 28 14:08:18 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* dyn_hash.h, cells-def.h: Moved `INTERNAL_NODE_SIZE' from
+	`cells-def.h' to `dyn_hash.h'.
+
+	* insn-def.h: Bugfixes to the below: Some insn fields were not
+ 	DECLAREd, therefore they were lost during copying.
+
+	* configure.in: Use only `-O' if not going for speed.
+
+	* Makefile.in, shades.[hc], cells.[hc]: The file `cells-def.h' now
+ 	has to be preprocessed twice: First cpp `cells-def.h' to
+ 	`cells-def-prep.h' and include it to wherever `cells-def.h' was
+ 	included.  Added this rule to `Makefile.in'.
+
+	* interp.[hc], insn-def.h, cells-def.h: Added a possibility to
+ 	have any word types in byte code insns.  (Though no insns
+ 	currently use this opportunity.)  Introduced a new field to insn
+ 	definition macros in `insn-def.h'.
+
+Wed May 28 12:07:36 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* shtring.c, shtring.h, test_shtring.c: Adapted hashing function
+	from string_intern.c.
+
+Wed May 28 10:26:30 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* dyn_hash.c: 
+
+	Previous version of dynamic hashing was binary tree with leaf
+	cells. Leaf cells had at most two keys per leaf.
+
+	Now:
+	
+	Dynamic hashing uses d-ary tree with arbitrary sized leaf
+ 	cells. Thus, dynamic hash tree has types of nodes: internal nodes,
+ 	which just contain links to other nodes, and external nodes
+ 	e.g. leaves, which contain keys and links to datas with that key.
+	
+        Internal nodes are of size d + 1. d is referred as and defined in
+ 	`INTERNAL_NODE_SIZE' (see `cells-def.h).  Type of internal node is
+ 	`CELL_internal'.
+  
+        Leaf cells contain only hash values e.g. keys and pointers to data
+ 	with that key. There are at most `MAX_KEYS_IN_LEAF' keys per
+ 	leaf. Type of leaf cell is `CELL_leaf'. Number of keys in leaf `p'
+ 	is stored in 3 lowest bytes of p[0]. Size of `p' is 2 * (p[0] *
+ 	0xFFFFFF) + 1.
+  
+        `LOG_ICS' is 2-base logarithmic of `INTERNAL_NODE_SIZE'. This is
+ 	needed e.g. when branching off from a node to right subtree.
+
+Tue May 27 10:49:13 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c, cells.c, cells-def.h: Added word type `NONNULL_PTR'.
+
+	* cells.[hc] (cell_clear_size_stats, cell_compute_size_stats,
+	cell_fprint_size_stats): Wrote these memory profiling tools.
+
+Mon May 26 12:33:47 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb_triev2.c: Yet another TPC-B test. This version uses 
+	triev2, a new version of tkk-trie, as access method.
+
+	* Makefile.in (TESTPROGS): Added target `test_tpcb_triev2.c'.
+
+Sat May 24 23:55:32 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* io.c (io_write_root): Realized that the latter `fsync' can
+ 	actually be omitted or at least postponed, thus allowing more
+ 	asynchrony in some environments.  Note, however, that this entails
+ 	some changes in disk page management in shades.c which are not yet
+ 	done, so the current Shades might perhaps not be recoverable.
+
+Fri May 23 16:25:59 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* triev2.[ch], test_triev2.c : Inserted (empty files) under RCS.
+
+	* Makefile.in : Added `triev2.[ch]', `test_triev2.c'.
+
+Mon May 19 10:40:06 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb_dh.c: Initial version of TPC-B test for dynamic
+	hashing access method.
+
+	* Makefile.in: Added target `test_tpcb_dh'.
+
+Sat May 17 01:54:02 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c: corrected two comparisons between signed and unsigned
+	with casts.
+
+Thu May 15 16:34:53 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Made a distribution called `shades-2.3alpha'.  It does not
+ 	contain the unfinished dynamic hashing code or any code related to
+ 	Nokia's kdqtrie.
+
+	* obstack.[hc]: Copied new versions from glibc-2.0.3.
+
+	* asm.c, asm_defs.h, asm_parse.y, avl.c, avl.h, cells.c,
+ 	dyn_hash.c, insn-def.h, interp.c, interp.h, io.c, list.c, priq.c,
+ 	priq.h, queue.c, shades.c, string_intern.c, test_aux.c,
+ 	test_aux.h, test_avl.c, test_gc.c, test_priq.c, test_strings.c,
+ 	test_trie.c: Extensive, though superficial cleanups, such as
+ 	adding parentheses, adding static declarations, adding prototypes,
+ 	and changing integer types from ints to longs and unsigned longs.
+
+Thu May 15 03:08:39 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: improved documentation, cleanups suggested by liw.
+
+Wed May 14 20:09:46 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c: Numerous cleanups suggested by Liw, mostly surficial.
+
+Tue May 13 17:45:20 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* dyn_hash.[ch], test_dyn_hash.c: Inserted under RCS.
+
+	dyn_hash.[ch] (dh_find_min, dh_find, dh_insert): Wrote, compiled
+	and tested a little. 
+
+Tue May 13 12:31:34 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_aux.[hc]: Minor stylistic cleanups in the transient AVL
+ 	tree codes.
+
+Thu May  8 01:02:34 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* test_reverserver.s: Made new assembler sequence
+	`_close_and_die' to close connections and terminate the
+	thread.  This is to have `net_close' on top of a sequence
+	because now it may block.
+
+Wed May  7 15:40:32 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (net_close): Added the max. allocation of blocking on
+ 	context switch to the insn's max allocation.
+
+Tue May  6 00:05:15 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: complete cleanup, several renamings (especially
+	`sock_info(_t)' -> `connection(_t)'.
+
+	* net.c: buffer handling now more robust, survives from
+	buffer allocation errors without data duplication.
+
+	* net.[ch]: `net_connect()' now split into two:
+	`net_prepare_connect()' to make a socket and prepare it for
+	connecting, and `net_do_connect()' to actually connect the
+	prepared socket.  Only the latter call may block.
+
+	* net.[ch] (net_close): Now takes thread_id as argument and
+	blocks if there is data pending in the write buffer.
+
+	* insn-def.h: Associated changes.  Byte code instruction
+	`net_close' may now block!
+	
+Fri May  2 15:24:25 EET DST 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* test_shtring_speed.c: Now works. Added timing, measurement of
+	  copy.
+
+Fri May  2 00:28:57 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_net.c: Removed from RCS. 
+
+	Makefile.in: Associated changes.
+ 	
+Thu May  1 00:27:17 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* interp.c: Added a rudimentaty bytecode insn trace facility.
+  	Useful for debugging new insns and bytecode programs.
+
+	configure.in: Associated changes as the addition of
+ 	`--enable-insn-trace'.  Simplified some other AC-definitions.
+
+Mon Apr 28 04:45:46 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (allocate): Added assertion that the allocation fits in
+	a single page.
+
+	* Makefile.in (TAGS): Added Lasu's suggestion to check the
+	presence of files before tagsing them.
+
+Mon Apr 28 00:21:40 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c (net_read_mem): Bug fixed, now sets error to 0
+	when enough bytes are in the buffer.
+
+	* net.c: (net_close): Bug fixed, forgot to actually close()
+	the file, doh!
+
+Fri Apr 25 23:30:29 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: New event type `NET_ERROR_EVENT' added.  This
+	is returned if an error occured while net.c was trying to
+	write to a socket in `net_number_of_wakeups()'.
+
+	* net.[ch] (net_number_of_wakeups): Go through all file-
+	descriptors, try to write data in buffer on those that
+	select()ed succesfully for writing (and are not connecting but
+	connected).  The event is only returned if all data remaining
+	in the write buffer has been succesfully written.
+
+	* net.c (net_write_{mem,char}): Now returns blocked status
+	if there is more than `write_block_treshold' bytes in socket's
+	write buffer before the write attempt.  If blocked, NO data
+	is copied into the socket's write buffer, so the write
+	command can be attempted again with exactly same parameters
+	and data to be written.
+
+	* net.[ch] (net_set_{read,write}_chunks_size,
+	net_set_write_block_treshold): written.
+
+Fri Apr 25 02:16:11 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Status report: Recovery tested successfully across several
+ 	architectures, some of different byte orders and word sizes.
+
+	* shades.c (can_allocate, allocate): Added assertion that the
+	allocation is at least 2 words.
+
+	(rvy_allocate_generation,
+ 	mark_twice_collected_generations_nonexistent,
+ 	mark_generation_collected_once): Made safe in environments where
+	mallocing zero bytes fails.
+
+	* io.c (io_write_root): After some manual, apparently the best
+ 	solution for file synchronizing is `O_DSYNC', `O_SYNC' and
+ 	filewise `fsync', in that order.  `O_DSYNC' would be equivalent to
+ 	e.g. Solaris' `fdatasync'.
+
+	* configure.in: Try to use `-lnsl' and `-lsocket' if available
+	(e.g. Slowaris).
+
+	* Makefile.in (.depend): `test -e' isn't supported everywhere, use
+ 	`test -f' instead.
+
+	* README: Updated file descriptions.
+
+Thu Apr 24 13:33:01 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* avl.c: Swapped `avl_rec_make_assertions' and
+	`avl_make_assertions', thereby getting rid of implicit declaration
+	and resulting warnings.
+
+Thu Apr 24 10:37:06 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* avl.c, test_avl.c: Wrote and compiled test functions for byte code
+	operations. Seems to work now.
+
+Wed Apr 23 21:32:50 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c: (net_{read,write}_char): rewritten to go through
+	the buffer as net_{read,write}_mem() to ensure correct order
+	of data when written/read.
+
+Wed Apr 23 01:51:28 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* root-def.h, interp.c (interp): Added a word to the root block
+ 	for memorizing the priority of the suspended thread (previously
+ 	the priority given as the argument to `interp' was used also
+ 	during recovery recovery, but naturally that was not quite
+ 	correct).
+
+	* insn-def.h (net_read_char, net_write_char, net_close): New
+ 	insns.
+
+	* test_reverserver.s: New byte code test program for network code.
+  	It responds to incoming messages by reversing the texts in between
+ 	semicolons.  Connections close by typing two semicolons (though
+ 	currently this causes net_close to segfault).
+
+Tue Apr 22 22:30:18 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* root-def.h, io.c: Initialize the first root time stamp to 1
+ 	instead of 0, and increment the time stamp after, not before,
+ 	writing the root block.  This means the time stamp is a valid
+ 	counter for the commit batch, should it eventually be used for
+ 	some other purposes.
+
+	* params-def.h: Removed parameters that were related to the now
+	obsoleted file `test_io.c'.
+
+	* io.c (io_read_root): Two fixes to convoluted bugs in the
+ 	`OPTIMIZED_ROOT_LOCATION'-code.
+ 	
+	In some hairy cases the right page may have been used as a root
+ 	even if it didn't have a valid root magic cookie.  Solved by
+ 	adding a flag `right_page_is_valid_root'.
+	
+	After recovery the page allocation cursors were left to zero (0),
+ 	thereby allocating pages (and root blocks) from the left edge of
+ 	the database after recovery.  If the database crashed and
+ 	recovered in rapid succession, at worst this lead to root blocks
+ 	being in random order, at best to lengthy scans in
+ 	`search_leftmost_root'.  Fixed by initializing the filewise
+ 	allocation cursors after the label
+ 	`found_newest_root_in_this_file'.
+
+	* io.c: Extensive cleanups both to the root block code and in some
+ 	old comments related to recovery-time assertions.  
+	
+	(io_read_root): Chose to use "left" and "right" to denote the
+ 	edges of binary search instead of "low" and "high" since the
+ 	latter words are already used in time stamps and felt slightly
+ 	confusing.  Changed label names to more verbose ones.  Removed
+	some useless variables.  Give a warning if we encounter a page
+	without any known magic cookie.
+
+	* io.c (io_init): Fixed a bug which caused each file to be of size
+ 	`db_size * disk_to_db_size_ratio' even though that disk space
+ 	should be divided among the files.
+
+	* io.c (number_of_free_disk_pages): Made static.
+
+Tue Apr 22 20:47:31 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: net_{read,write}_char() written.
+
+	* net.[hc]: Renamed `net_return_t.cont_id' to `thread_id'.
+
+Tue Apr 22 20:44:18 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* interp.c (init_interp): Added call to `net_init'.
+
+Tue Apr 22 19:36:17 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: return type of `net_close()' changed from int
+	to void.
+
+	* net.[ch]: fixed (un)signedness on types, no more warnings
+	from them.
+
+	* io.c: (io_read_root): bug fixed: duh, forgot to set the
+	status of the root page to `ROOT' after it was found.
+
+	* io.c: fixed type `WORDS_PER_DISK_BLOCL' ->
+	`WORDS_PER_DISK_BLOCK'.
+
+Mon Apr 21 16:33:51 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c: Checked signednesses and longnesses of values and
+	added some sign extensions and `%l' in format strings.  Passes now
+	--enable-warnings without compaints.
+
+Mon Apr 21 14:02:25 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: A complete plastic surgery.  Lots of additional
+	documentation.
+
+Mon Apr 21 09:27:36 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_fulam.s: Removed the file from under RCS.
+
+Sun Apr 20 22:29:38 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c: (net_close): removed printf for closing information.
+
+Sun Apr 20 17:23:57 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* interp.c (interp): Wrote code after labels `block_cont' and
+ 	`die_cont' to blocks and wakes up threads.
+
+	Instead of returning if no threads are runnable, now, if there are
+ 	blocked threads, we wait a little and try to wake up the dormant
+ 	threads.
+	
+	* root-def.h (blocked_threads, highest_thread_id): Associated
+ 	additions.
+
+	* cells-def.h (context): Added fields for `thread_id' and
+ 	`priority'.
+
+	* insn-def.h (net_listen, net_accept, spawn): Wrote these new
+ 	instructions.
+
+Sun Apr 20 14:43:02 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c: (net_get_wakeup): bug fixed, now goes through all
+	filedescriptors correctly.
+
+	* net.c: (net_get_wakeup): now removes blocking information
+	on filedescriptor here.  Next select() will not select for
+	a socket that has been returned by net_get_wakeup() before
+	a net_ call has blocked for it again.
+
+	* net.c: `net_has_wakeups()' renamed to
+	`net_number_of_wakeups()' to fit to what it actually does.
+
+	* io.c: more cosmetic changes.
+
+Fri Apr 18 14:54:53 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* avl.c (avl_bc_insert): Wrote and compiled.
+
+Fri Apr 18 00:16:26 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Makefile.in (dist): Added `chmod u+w' for all files in the
+ 	distribution.
+
+Thu Apr 17 20:03:00 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* shtring.c: Fixed long-standing bug in copy_chunk_to_cstr
+	that sometimes caused overwrites of one byte of the target
+	memory buffer. This destroyed the malloc internal data
+	structures, and crashed the machine. The actual bug was
+	trivial:
+	
+		do { copy-one-byte; } while (count-- > 0);
+	
+	This loops one time too many. If it had been a while loop,
+	with the same condition, it would have worked. The correct
+	do-while form is:
+	
+		do { copy-one-byte; } while (--count > 0);
+	
+	The moral: don't write code to do many things in a single
+	expression.
+	
+	Sigh, this took a couple of weeks to find (though I hardly
+	worked on it full time).
+	
+	Shtrings are now Officially Perfect. Er.
+	
+	There are some other changes in shtrings.c as well. These
+	fix problems with comparing shtrings.
+	
+	Also: made it possible to compile shtrings.c on a big-endian
+	system.
+	
+Wed Apr 16 13:45:16 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* io.c: some cosmetic improvements.
+
+Tue Apr 15 12:24:35 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* avl.c (avl_bc_delve_[left/right]): Wrote and compiled.
+
+	(avl_bc_delete): Wrote and compiled.
+	
+Sun Apr 13 22:09:20 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* test_net.c: improved documentation.
+
+Sat Apr 12 20:37:30 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c: Continued cleanups, additional commenting, and
+	renaming.
+
+Fri Apr 11 00:23:38 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* io.c (io_read_root): bug fixes:
+	Now does not reset `middle_page' if it was changed.
+	Checks if we reach `low_page' or `high_page' after
+	changing search direction.
+
+	* configure.in: Added --enable-optimized-root-location for
+	optimized root writing (feel free to change the option name,
+	it is a bit too verbose).
+	
+Thu Apr 10 23:53:06 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (generation_info_grow): Changed pointer arithmetic for
+	recomputing pages' generation-pointers so that it produces the
+	correct result also on DEC cc (old version works quite nicely with
+	gcc).  Whether this is a bug in DEC cc or our code is a little
+	hazy.
+
+Tue Apr  8 04:37:13 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c: Some further cleanups.  Structurally this and previous
+ 	cleanups include:
+
+	`rvy_copy_cell' with `drain_copy_stack' option has been split to
+	its own function analogously to the non-recovery part.  
+
+	Similarly `rvy_reconstruct_older_remsets's functionality in
+ 	`rvy_major_gc_step' was has now been dedicated to
+ 	`rvy_major_gc_step'.
+
+Mon Apr  7 09:14:58 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c: Major cleanups in the sections until the rvy-part of
+	the stop&copy-collector.
+
+Sun Apr  6 00:46:01 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* io.c: fixed bug in root search algorithm, the latest root
+	may also be the lower page.  Now checks lower and higher page
+	time stamps when search terminates.
+
+	* io.c: bug fixed, now sets initial time stamp when creating
+	a database file.
+
+Sat Apr  5 00:21:55 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Status report: Some rather harsh tests on recovery showed no
+ 	problems any more.  I think I can finally shave my ticklish beard!
+
+	* shades.c (rvy_copy_cell): Outthought the last toughtless, though
+ 	though-provoking bug.  
+
+	Roughly, I had forgotten that the purpose of the data in `to_gn'
+ 	was to have newer (though still with outdated pointers) which
+ 	allowed cells to refer to other cells in the previous major gc
+ 	round.  Fixed by replacing `p' by `old_p' and `new_p' by `p' in
+ 	subtle places in the macro definitions in `rvy_copy_cell', thereby
+ 	effectively moving the macro bodies' view forward in time by one
+ 	major gc round.
+
+	* shades.c (rvy_allocate_generation): Fixed the bug of calling
+ 	`rvy_allocate_generation' to be called with `gn' instead of 
+	`gn + 1'.
+
+	* shades.c (read_major_gc_base_round): Fixed a bug which caused
+ 	collected generations to be put in the linked list in reverse
+ 	order.
+
+	* shades.c (read_major_gc_round): Partial rewrite that fixed the
+ 	long known bug that caused the age-ordered doubly linked list of
+ 	generations to be flattened during recovery.
+
+	In the process of the above, split `rvy_insert_after' apart from
+ 	`rvy_allocate_generation'.
+
+	* shades.c (drain_copy_stack): Fixed a bug caused by the
+ 	micro-optimizations below -- we forgot to update `to_ptr' from
+ 	`reg_to_ptr'.
+
+	* shades.c (rvy_copy_cell): Fixed a subtle bug in collecting DAGs
+	at page boundaries.  Introduced `rvy_next_to_ptr' and renamed
+	`rvy_new_to_page' to `rvy_next_to_page'.  Partial cleanups.
+
+Fri Apr  4 20:22:18 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (read_page): Merged into `read_generation' and
+ 	discarded.
+
+	* shades.c (copy_cell, drain_copy_stack): Separated
+ 	`drain_copy_stack' from `copy_cell' and brought back some of the
+ 	RISCy micro-optimizations to `drain_copy_stack'.  This improved
+ 	CPU-performance by ~5-6% on 2/3 full databases.
+
+	* shades.c (free_page, allocate_page, rvy_allocate_page,
+ 	construct_page_freelist): Partially rewrote free page management.
+
+	(is_recovering): Added.
+
+	(page_info_t.is_allocated): Replaces `status' field.
+
+Thu Apr  3 15:33:16 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Status report on recovery: Cell-level recovery appears to work,
+ 	but free page management is incorrect during recovery.
+  	Furthermore the current way of constructing the doubly linked gc
+	list is suspicious.
+
+	* shades.c: Gc-related messages go to `stderr' today.
+
+	* shades.c (rvy_new_to_page, rvy_copy_cell,
+ 	rvy_redirect_remembering_ptrs, rvy_reconstruct_older_remsets,
+ 	rvy_major_gc_step): Completely rewrote the cell-level recovery.
+  	This was caused by a bug which caused older remembered sets to
+ 	have same contents during recovery as during uptime, but in
+ 	different order.  The current solution in recovery is also much
+ 	more analogous in code to uptime major gc.
+
+	* cells-def.h (bonk): Added temporarily so that debugging was a
+	little easier (it is easier to distinguish the `p0' of lists from
+	word dumps).
+
+	* cells-def.h (generation_pinfo): Added field
+	`number_of_referring_ptrs'.
+
+	root-def.h (youngest_generation_number_of_referring_ptrs): Added.
+
+	shades.c: Related changes in `cache_generation_pinfo_to_root',
+ 	`prepend_generation_pinfo', and several others.  Added macro
+ 	`COPY_STACK_DEPTH'.
+
+	* Makefile.in: Removed `test_io' from `TEST_PROGS' and also from
+	the RCS repository.
+
+	* Makefile.in: Added `TAGS' to target `all'.
+
+	* io.c (io_write_root): Fixed a bug caused by sloppy editing.
+
+Wed Apr  2 16:26:43 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* io.[ch]: Removed arguments from `io_{read,write}_root',
+	now uses root directly.
+
+	* io.c: Optimized root writing and reading written.  The root
+	is now written among normal data pages in the same round-robin
+	manner as the data itself.  Root is timestamped and the latest
+	root is searched from files with a modified binary search
+	algorithm.  Used only if `OPTIMIZED_ROOT_LOCATION' is #defined.
+
+	* cookies.h: Cookie `UNUSED_PAGE_COOKIE' for unused pages
+	on disk added.
+	
+Wed Apr  2 11:47:55 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* test_aux.c: All AVL-tree operations in the file are now
+	avl_destr_* instead of avl_*. 
+
+	* avl.c : Seems to work now. Added comments. TODO: In double
+	rotates need not to allocate 2 `avl's.
+
+Tue Apr  1 17:50:53 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* params.c (load_param_file): Minor fix: removed newline character
+	from string read from a parameter file before using it for
+	displaying error messages. 
+
+Tue Apr  1 13:23:37 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* cells-def.h: Added new CELL types: avl and avl_item.  
+
+	* avl.c: Wrote and compiled functions
+	{simple,double}_rotate_{left,right}, find_min, find, insert and
+ 	delete.
+
+	Wrote macros IS_INTERNAL_NODE(p), KEY(p), HEIGHT(p) and BALANCE(p).
+
+	* test_avl.c: Wrote and compiled.
+	
+Tue Apr  1 02:57:28 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (read_major_gc_round): Sketched, except for the call to
+ 	`rvy_major_gc_step' which has not yet been written.
+	
+	(recover_db): Use `read_major_gc_round' instead of a direct call
+ 	to `read_base_major_gc_round' (ifdeffed).
+
+Mon Mar 31 18:23:44 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (recover_db): Added some assertions that we don't try
+ 	to recover a database which has already experienced some mature
+ 	gc.
+
+	* shades.c (rvy_allocate_generation, read_generation,
+	read_base_major_gc_round): Wrote.
+	
+	(recover_db): Changed to use `read_base_major_gc_round'.
+
+	* shades.c (read_page): Wrote.  
+	
+	(recover_db): Related changes.
+	
+	Added recovery-time array `disk_page'.
+
+	* shades.c (flush_batch), root-def.h: Root pagification discarded.
+  	Turns out we don't need it, and actually even can't use it.
+
+	* shades.c (choose_major_gc_generations, flush_batch):
+ 	Minor code reorganizations.
+
+	* shades.c: Adapted command line argument reading to conform to
+ 	the changes documented below.
+
+Mon Mar 31 17:52:37 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* params.c: Modified parameter related errors to be fatal. The
+	program exits with an error message if it detects any unknown
+	parameter or error in a parameter definition syntax. Command line
+	arguments used passing parameter values are assigned to NULL after
+	reading.
+
+	* params-def.h: Renamed parameter `verbode_mode' to `be_verbose'.
+	
+	{interp,params,test_tpcb,test_tpcb_kdqt,test_sysm}.c: Adopted new
+	parameter name for verbose mode.
+
+Mon Mar 31 01:21:41 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (flush_batch): Added code that pagifies the old root
+	(for sake of directly reading the older gc rounds, and thereby
+	speeding up recovery).
+
+	root-def.h (prev_pagified_root, prev_prev_pagified_root): Added.
+
+	* shades.c (choose_major_gc_generations, flush_batch): Added the
+	flag `major_gc_was_started' which is used to delay freeing twice
+	collected generations until the end of the major gc round.
+
+	params-def.h (disk_to_db_size_ratio): Changed to 4, which probably
+ 	is overkill, but keeps it out of mind until some other more urgent
+ 	issues are settled.
+
+	* shades.c (flush_batch): Minor reorderings that reflect better
+	the logical dependence of actions.
+
+	* root-def.h (prev_generation_list, prev_prev_generation_list):
+	These can be WORDs since the old generation pinfo lists *may* be
+	collected away as long as they are intact on disk.
+
+	* root-def.h (time_stamp_hi, time_stamp_lo): Added.
+
+	root.[hc] (increment_root_time_stamp, time_stamp_if_newer_than):
+ 	Wrote.
+
+	* shades.c, cells-def.h: Removed the counters
+ 	`number_of_rooted_cells' and `number_of_remembered_cells'.  Turns
+ 	out that we can do recovery quite nicely even without them.
+
+Sun Mar 30 16:17:50 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (rvy_start_gc, rvy_new_to_page, rvy_copy_cell,
+	rvy_redirect_remembering_ptrs): Wrote.
+
+Sat Mar 29 13:23:46 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c: Add counters `number_of_remembered_cells' and
+	`number_of_copied_cells' to persistent page info.
+
+	* shades.c (choose_major_gc_generations): Eradicated the
+ 	additional generationality code that had been disabled two days
+ 	before.
+
+	* shades.c (init_shades): Added more parameter and PAGE_SIZE
+	sanity checks.  Improved problem reporting.
+
+	* shades.c (cache_generation_pinfo_to_root): Split from
+ 	`prepend_generation_pinfo'.  It in turn got an argument which
+	tells how many parent generations the new generation has.  Added
+	calls to it from `major_gc_step' for each to-generation.
+
+	cells-def.h (generation_pinfo): Use bits 12-23 of p0 to denote the
+	number of parent generations.  Zero for new generations.
+
+Thu Mar 27 21:55:15 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (choose_major_gc_generations): Disabled additional
+ 	generationality.  Loses a some performance in the admittably
+ 	important 50-90% database utilization range, but necessary in
+ 	order to advance towards full recoverability.  Might be enabled
+ 	later.
+
+	shades.c (choose_major_gc_generations), root-def.h: Generation
+ 	persistent info lists are now maintained on a major gc round
+ 	basis.  This fixes the slow space leak by the generation pinfo
+ 	list (formerly `generation_map').
+
+	Renamings, e.g. `generation_map -> generation_pinfo' and
+	`latest_... -> youngest_...' in `root-def.h'.
+
+Thu Mar 27 15:37:46 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* test_trie.c, test_strings.c: Sizes of arrays are now constant
+	expressions instead of (illegal) randoms evaluated at run-time.
+
+	* avl.[hc], test_avl.c: Inserted into RCS.
+	
+Mon Mar 17 15:29:56 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb.c: Function `print_table' was modified to support
+	scattered keys.
+
+	* test_tpcb_kdqt.c: Added support for using scattered keys during
+	tpcb-tests. To invoke this feature, start the program with
+	argument "--scatter-key".
+
+Fri Mar 14 22:11:48 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* run_tpcbs: Minor changes in regexps to allow slightly more
+ 	freedom in file formats.
+
+	* test_tpcb.c (insert_records): Added an assert that checks the
+	key is not inserted twice.
+
+	(main): Barf on unknown options.
+
+	* test_aux.c (scatter): Entirely rewritten.  This really is a
+ 	permutation in the entire 2^32, and according to the
+ 	chi-square-test it is just as good as a random number generator
+	(at least as long as the size of the sample is small enough that
+ 	the comparatively small domain doesn't unavoidably cause bad
+ 	behavior due to the shorter cycle of `scatter' compared to
+ 	`random').
+
+Fri Mar 14 16:44:21 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb.c: Added a new runtime parameter `--scatter-key'. Made
+	related changes elsewhere. Note that the function which scatters
+	the bits of a given word has not been implemented yet. 
+
+Thu Mar 13 13:20:00 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* shtring.c: Wrote shtring_cmp.
+	
+	* test_shtring.c: Added trivial testing for shtring_cmp. Made
+	default value for max_shtring_chunks smaller (20000 -> 15000),
+	so that two maximal size shtrings can exist at the same time.
+
+Tue Mar 11 14:27:31 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_sysm.c (sysm_run): The output format was slightly modified
+	to support script `run_tpcbs'.
+
+Tue Mar 11 08:02:11 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (generation_info_grow): Wrote.  Related changes
+ 	elsewhere.
+
+	(choose_major_gc_generations): Added a test which causes full
+	major gc if there's not sufficient slack disk space.
+	
+	Moved mature garbage collection messages again from stderr to
+ 	stdout.
+
+	* run_tpcbs: Added code to produce surface plots of latency
+	information.  A few fixes in previous functionality.
+
+Mon Mar 10 00:02:48 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* run_tpcbs: Added this perl script to the benefit of eased
+ 	benchmarking.  Appended to $SCRIPTS in `Makefile.in'.
+
+Sun Mar  9 22:28:11 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c: `release_buffer()': still one more bug fixed,
+	all variables now reset properly after freeing buffers.
+
+Sat Mar  8 22:51:52 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c: `release_buffer()' bug fixed: the list was freed
+	until the current element would be NULL, but this naturally
+	does not work for a cyclic list.  The comparison now made
+	to the first element pointer.
+
+	* net.c: `net_connect()': bug fixed, now fills in return
+	values when successful.
+
+Tue Mar  6 18:20:00 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* shtring.c: Sped up shtring_charat, shtring_strat, string_copy.
+	Disabled shtring_shape (needs to adapted to new monkey).
+	
+	* params-def.h: Added new parameter max_shtring_chunks.
+	
+	* test_shtring.c: Made number of chunks used run-time
+	selectable. This makes it easier to run tests in different
+	configuration.
+
+Thu Mar  6 07:56:39 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c: Additional pervasive cleanups and contractions.
+  	Melded function `collect_first_generation' to `flush_batch'.
+
+	* params-def.h (disk_to_db_size_ration): Default now to 3.5,
+	though 3 should be enough (the old 2 is not enough!).
+
+	* shades.c: Split page and generation management again.  Moved
+	disk space management from pages to generations.  
+
+	Generations memorize their parent generations.
+	
+	In addition to the familiar states NONEXISTENT, NORMAL,
+ 	TO_BE_COLLECTED, and BEING_COLLECTED, generations now also have
+ 	the states COLLECTED_ONCE and COLLECTED_TWICE.  These states are
+ 	essentially counter states for disk page freeing.
+
+	Moved more functionality to `allocate_generation'.
+
+	(mark_twice_collected_generations_nonexistent,
+	mark_generation_collected_twice, mark_generation_collected_once,
+	add_page): Wrote.
+
+	(write_page, free_old_disk_pages, count_being_collecteds):
+ 	Removed.
+
+	(recover_db): Changes that reflect the way parentless generations
+	are instantiated.
+
+	Cleanups.
+
+	* Makefile.in: `random.c' and `memmove.c' were in `$(THEIRSRCS)'
+ 	and the old rules took them into `$(OBJS)' regardless of whether
+ 	`configure' added them to `LIBOBJS' or not.  Fixed this by
+	rewriting the defition on `$(OBJS)'.
+	
+	* bison-or-flex: The premade files' suffixes were `.premade', not
+ 	`-premade'.
+
+Wed Mar  5 15:46:19 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* params-def.h, shades.c (relative_mature_generation_size,
+ 	rem_sets_per_malloc): Two constants changed to parameters.
+	
+	* shades.c: Major cleanups and reorganizations, particularly in
+ 	the page and generation management, but otherwise only a little
+ 	new algorithmics.
+
+	`free_generation' now also frees the pages in that generation.
+
+	Moved the test for `is_collecting' from `major_gc_step' to the
+	driver `major_gc'.
+
+	(Would do more, but they're coming to take me away, huhuu, hahaa,
+ 	they're coming to take me away, huhuu, hahaa, hihii...)
+
+Tue Mar  4 22:43:22 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (major_gc_step): Essentially a full rewrite.  Instead
+ 	of the previously used incremental merging (after the other
+ 	generation had already been copied), now we first decide which
+ 	generations to merge, mark them BEING_COLLECTED, then apply
+ 	`copy_cell(0, ..)' to the contents of their remembered set (in a
+ 	deterministic way so that we can do recovery), then scan similarly
+ 	the root set (now it has to be done only once for all the merged
+ 	generations), then perform the recursive copy of cells, and
+ 	finally free the old generations.  The new scheme may consume a
+ 	little more memory, but it is recoverable, clearly more stylistic
+ 	in code, and apparently it did increase the performance by a
+ 	surprising ~10%!?.
+
+	Left some degubbing routines.  They may be useful some day.
+
+	Commit groups are (temporarily?) shown in `stderr' instead of
+ 	`stdout'.
+
+Tue Mar  4 20:24:00 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* params-def.h: Added `test_shtring', for selecting what
+	routines to test.
+	
+	* shtring.c: Performance optimization. Shtrings can now be
+	created at about 12 MB/s on dio. If build_chunk is replaced
+	with memcpy, the speed is about 18 MB/s.
+	
+	* test_shtring.c: Made testing of different operations
+	selectable via parameters. Also made ugly hack for doing
+	some performance testing, making test_shtring not work except
+	in some circumstances. Don't try this at home.
+
+Tue Mar  4 18:04:00 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* shtring.c, test_shtring.c: Some modifications for performance
+	and performance testing.
+
+Tue Mar  4 17:53:10 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb_kdqt.c: Adopted recent changes made in Kdqtrie-interface. 
+
+Tue Mar  4 14:25:16 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c: Remembered set routines simplified so that instead of
+ 	using the weird condition on rem set exhaustion, we now end the
+ 	rem set to `REM_SET_TAIL_COOKIE', not NULL.  Dumped the non-32-bit
+ 	versions of `PREPEND_TO_REM_SET' in favor of a single version.
+
+	* shades.c (rvy_reconstruct_older_rem_sets): Wrote.
+
+	* shades.c: Dumped `page_info.free_index' and started to use
+	`page_ptr[1]' instead.
+
+	* shades.c: Restructured `rec_copy_cells' and renamed it
+ 	`copy_cell'.  Changed it usage.  Removed (temporarily?) some of
+	its CPU-optimizations.
+
+Mon Mar  3 17:04:00 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* Makefile.in, configure.in, bison-or-flex: Added support
+	for VPATH. It is now possible to keep object files (and
+	other files generated by make) in a different directory
+	than sources. This makes it easier to keep differently
+	configured versions (e.g., one directory with and one
+	without debugging). To use, create the object directory,
+	make it the working directory, and run `/path/to/configure'.
+	Configure automatically handles everything (I hope). If you
+	aren't in a different directory, everything will be as before.
+	
+	* Makefile.in: Added `dist' target.
+
+Mon Mar  3 10:33:44 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c: `data' in `buf_chunk_t' changed to array of one
+	char.  The length should never actually be used, because
+	buffer chunks are never allocated directly, but many
+	compilers do not accept 0 as array length.
+
+	* net.c: `buffer_pool' and `buffer_pool_pointer' changed
+	from (void *) to (char *), because they are involved in
+	pointer arithmetics.
+
+Sat Mar  1 13:22:27 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* configure.in: Don't have `-g' by default as some inferior
+	compilers complain about it with optimizations.  Instead, turn on
+	`-O' always with gcc and `-g' if we don't --enable-speed.
+
+	* shades.c (recover_db): Fixed a bug which caused the second
+ 	newest generation's `prev_gn' to be initialized to
+ 	`INVALID_GENERATION_NUMBER'.
+	
+	* shades.c (PREPEND_TO_REM_SET): This bug was fixed sometime
+ 	earlier, but was lost somewhere.  In non-32-bit machines the trick
+ 	to detect the exhaustion of the rem set does not work, instead we
+ 	need an additional addition.
+
+	* README: Added info on how to pass `CC' and `MAKENAME' to
+ 	`configure'.
+
+	* Fixes to keep DEC cc quiet:
+
+	asm.c: Added casts from the return type of `obstack_alloc' to
+	the desired type.
+
+	string_intern.[hc] (char_ptr_to_string): Removed unsignedness
+	from char type.
+
+Thu Feb 27 12:21:00 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* shtring.c: Added some asserts and other checking and fixed
+	problems found. Other minor cleanup.
+
+Thu Feb 27 12:08:28 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* trie.[hc] : Inserted in the introduction a reference to Sedgewick's
+	book Algorithms.  
+
+Wed Feb 26 16:02:02 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* params.c (verify_integer_format): A bug in reading hex and octal
+	parameter values fixed.
+
+Wed Feb 26 15:11:03 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_recovery (main): Added timing of startup time and recovery
+ 	time.
+
+	* shades.c (recover_db): Copied the statements that represent the
+ 	very end of each commit batch from `flush_batch' to `recover_db'.
+  	The points being that disk images are now recoverable also after
+ 	recovery.
+
+Tue Feb 25 16:56:10 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* io.c (io_read_{root,page}): Swap bytes of all the words in the
+ 	read page or root block if the magic cookies suggest they are in
+ 	the reverse byte order.
+ 
+	* bitops.[hc] (swap_bytes, SWAP_BYTES): Wrote.
+
+	* shades.c (init_shades): Initialize the page magic cookies.
+
+	* cookies.h: Initiated, partly by collecting from existing
+ 	sources.  `{PAGE,ROOT}_MAGIC_COOKIE' are new.
+
+Tue Feb 25 15:00:00 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* shtring.h: Moved SHTRING_WORDS and SHTRING_CHUNK_MAX from
+	shtring.c. These are now needed by test_shtring.c.
+	* test_shtring.c: Rewritten to run a number of tests and check
+	their results automatically.
+	* shtring.c: Various bug fixes. Most importantly, it should now
+	be able to handle shtrings of length zero.
+
+Tue Feb 25 02:42:05 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: net_close() and release_buffer() written.
+	The buffer system a whole lot more robust now that buffers
+	are freed when a connection is closed due to error or
+	outside call to net_close().
+
+	* net.c: Internal functions (essentially those not
+	prefixed net_) declared static, prototypes added.
+
+Mon Feb 24 16:00:51 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb_kdqt.c: Initial version of TPC-B test program which
+	uses Kdqtrie as access method. The program is identical to the
+	trie-version, `test_tpcb'. The program should be run by giving the
+	size of tpcb and the duration of the test: "./test_tpcb_kdqt 2 120".
+	Optional argument "--show-progress" displays the number of executed
+	transactions during database update.
+	
+	* Makefile.in (TESTPROGS): Target `test_tpcb_kdqt' added.
+
+Sun Feb 23 23:12:10 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (make_first_generation_assertions,
+ 	first_generation_fprint): If the uppermost bits of the red zone
+ 	are intact, use the red zone jump info instead of the next cells
+ 	size to determine the position of the next red zone.
+
+Fri Feb 21 17:15:35 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* string_intern.c (string_intern): Fixed a bug in an assertion
+	caused by missing parentheses in `p[0] & 0xFFFFFF > 0'.
+
+Fri Feb 21 12:38:00 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* shtring.[ch], test_shtring.c: Renamed fprint_shtring to
+	shtring_fprint. Added support for WORDS_BIGENDIAN; this
+	is untested, but obviously works. :-)
+
+Thu Feb 20 17:34:00 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* shtring.[ch], test_shtring.c: Fixed some bugs, and added
+	new operations shtring_copy, shtring_charat, and shtring_strat.
+
+Wed Feb 19 17:24:00 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* shtring.c, test_shtring.c: shtring_create seems to work,
+	shtring_cat for some small cases as well (others have not
+	yet been tested).
+
+Wed Feb 19 11:22:00 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* Makefile.in, test_shtring.c: Added first prototype for test
+	program for shtrings. Doesn't work.
+
+Tue Feb 18 13:03:27 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* Makefile.in, shtring.[ch]: Added first prototype for strings.
+	This isn't usable -- added to the Makefile only to try out
+	compilation.
+
+Thu Feb 13 13:10:08 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* test_net.c: finally changed to match the new API of
+	net.[ch].
+
+Web Feb 12 05:19:25 1997  Lars Wirzenius <liw@dionysos.cs.hut.fi>
+
+	* cells-def.h: Added shtring cell definitions.
+
+Tue Feb 11 15:23:17 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb.c (main): If the test duration time is 0 or less, the
+	program now creates the database and exits, skipping `tpcb_run'.
+
+Tue Feb  4 14:58:22 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.[ch]: Return values of net_* changed!  (Almost) all
+	functions to be called from outside now return a net_return_t.
+	See net.h for further information and documentation.
+
+	* net.[ch]: net_connect written.  Compiles, not tested yet
+	(working on testing).  Note that the current version blocks
+	indefinetly while doing the DNS query!
+
+Mon Feb  3 16:44:22 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* string_intern.[hc] : Made changes to comments. Renamed
+	INCL_STRING_MAP_H to INCL_STRING_INTERN_H and
+	STRING_MAP_MAX_ALLOCATION to STRING_INTERN_MAX_ALLOCATION. 
+
+	word_vector_hash: Inserted assertion 
+	`CELL_TYPE(p) == CELL_word_vector'.
+
+	char_ptr_to_string: Type of `*s' is now unsigned char instead of char. 
+
+	string_to_char_ptr: Inserted assertions 
+	`CELL_TYPE(p) == CELL_word_vector' and `number_of_words > 0'.
+
+	string_cmp: Removed a bug: Longer string is not always later in
+	alphabetical order.
+	
+Mon Feb  3 14:08:06 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb.c (tpcb_run): Changed `delta' to get a value between
+	-999999 and 999999.
+
+Wed Jan 29 09:13:20 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* interp.c (interp): Noticed and fixed a bug of not storing and
+ 	recovering `accu' in/from the root block.  Under suitable
+ 	circumstances this could have caused one byte code thread to go
+ 	haywire after recovery.
+
+	root-def.h: Split `suspended_accu' to cases of ptr and word.
+
+Tue Jan 28 16:42:29 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_sysm.c: Transaction driver was modified to compute and
+	display flush-batch latency statistics. Comments added. 
+	Unused macro `NUM_RECORDS_TABLE_CUST' removed. 
+
+Tue Jan 28 07:23:34 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_recovery.c: Wrote.
+
+	Makefile.in: Added `test_recovery' to `TEST_PROGS'.
+
+	* shades.c (recover_db): Wrote.  It is able to recover databases
+	that have not yet experienced any mature garbage collection.
+	
+	* cells-def.h (generation_map): Replaced disk page number and
+ 	offset information of the next generation map by a normal Shades
+ 	pointer.
+
+	shades.c (prepend_generation_map): Respective changes.
+
+	root-def.h: Ditto.
+	
+	* io.c (interp): If called with `cont == NULL_PTR', grok a
+	recovered continuation.
+
+Mon Jan 27 17:36:50 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (prepend_generation_map): Wrote.
+
+	Additional simplifications in commit grouping.
+
+	* root.c (root): Now of full DISK_BLOCK_SIZE.
+
+	* root-def.h: Added the definitions of the latest generation map
+ 	entry in the root block.
+
+	* params-def.h: Reordered the parameters into semantically
+	different groups.
+
+Mon Jan 27 15:10:14 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c: `ALLOCATE_FREE_CHUNK_LISTS' renamed to
+	`CHUNK_LISTS_TO_ALLOCATE' and some other aesthetic
+	changes.
+
+	* net.c: `read_from_buffer' renamed to `copy_from_buffer'.
+
+	* net.c: fixed chaining of additional buffer chunks to
+	buffers in `copy_to_buffer' and `read_to_buffer'.
+
+	* net.c: fixed the upper limit of `bytes_to_write' in
+	`copy_to_buffer' and `write_from_buffer'.
+	
+	* test_net.c: made more daemon-line now, accepts connections
+	and writes back all data received on sockets.
+
+	* params-def.h: added parameters `verbose_server' and
+	`verbose_client' for network IO testing.
+
+Mon Jan 27 15:00:00 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* Makefile.in: Added dependency on $(SRCS) for .depend, so that
+	flex-generated files are created automatically.
+	
+	* configure.in: Added new option, --enable-warnings, which adds
+	some rather aggressive warnings if GCC is being used. At the
+	moment, this results in _huge_ amounts of warnings.
+
+Mon Jan 27 13:45:00 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* Makefile.in: Added removal of asm_lex.c, ams_parse.h,
+	asm_parse.c, and configure to `realclean', and removal of config.log
+	to `distclean'. We are the cleaner. Littering is futile. You will be
+	unlinked.
+
+Mon Jan 27 13:39:44 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_sysm.c: The type of `sysm_size' modified from `int' to
+	`float'. Related changes made elsewhere. This means that 
+	float-type database sizes are now accepted as legal program
+	arguments. 
+
+Mon Jan 27 09:17:36 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Makefile.in: Added phony target `depend' as the first target of
+	which `all' depends.
+
+	* root-def.h: Removed fields `last_disk_page_number' and
+ 	`persistent_page_map'.
+
+	* cells-def.h: Replaced `persistent_page_info' with
+ 	`generation_map'.
+
+	* Makefile.in: Removed `basic_trie.[hc]' from the distribution.
+
+	* shades.c: Discarded fields `has_changed' and `next_changed' from
+ 	the struct `page_info_t', eliminated functions
+ 	`cell_is_recovered', `notify_page_change',
+ 	`update_persistent_page_infos', and performed various
+ 	simplifications allowed by the above pruning.  Note that the
+ 	database image is currently not even theoretically recoverable.
+
+	* shades.[hc], cells.c: Moved deadbeef definitions to `shades.h',
+ 	used now also in `cells.c'.
+
+Sat Jan 25 15:10:29 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c, cells-def.h: Minor cleanups.
+
+	* Makefile.in: Made all object files depend on the Makefile.
+
+Fri Jan 24 16:31:09 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_sysm.c: SysM-transactions implemented. 
+
+	* params.c (replace_character): Bug fix: Assert condition verifies
+	now correctly the validity of the argument string.
+
+Fri Jan 24 12:09:00 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* configure.in, Makefile.in: Added automatic computation of
+	dependencies. Do "autoconf; ./configure" after you check out
+	the new version. Then run "make depend" to make sure dependencies
+	are up to date.
+
+Thu Jan 23 17:29:24 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_sysm.c (insert_records): Bug fixes: Tables with at least
+	one variable string field now use cell-type `CELL_env'. This is
+	supposed to be a temporary solution, because the `env' type wasn't
+	originally designed for variable length records. Fixed length
+	strings are copied to word-vectors using `memcpy'. Note that this
+	is also a temporary fix for copying fixed length strings!
+	(print_table): Written to print table `table_acc_info'. Other
+	SysM-tables will be added to this function soon. Note that this
+	function is used only for debugging purposes.  
+
+Thu Jan 23 05:56:04 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_priq.c: Changed incorrect references to `pqueue_'-functions
+ 	to `priq_'-functions.
+
+	* cells*: Minor cleanups and clarifications in comments.
+
+Wed Jan 22 15:28:04 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_sysm.c: Transaction driver `sysm_run' implemented. Also,
+	functions, which implement SysM's transactions, initiated. 
+	`sysm_db_create' modified to use SysM's size which is given as a
+	runtime argument. 
+
+Tue Jan 21 17:22:49 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_sysm.c: Initial version written. SystemM is a benchmark
+	system which uses a credit card database to measure the
+	performance of main memory databases. The database consists of
+	four tables. During the benchmark eight different transactions
+	are executed. This version is based on the article written by
+	H. Garcia-Molina and K. Salem (the complete reference is given at
+	the beginning of this file). Also, the program code of SystemM,
+	delivered by K. Salem, was consulted in order to understand
+	implementation details.  
+	
+	* Makefile.in: Added target `test_sysm'.
+
+	* root-def.h: Root definitions added for SystemM tables. 
+
+Mon Jan 20 20:02:11 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* README: Additions and clarifications to the description of
+ 	Shades.  In particular, a new paragraph that describes the root
+ 	block.
+
+	* Changed `priority_queue's and `pqueue's to `priq's including in
+ 	file names, functions and macros.
+
+	Partial cleanups in `priq.c'.  Changed it to use the `cmp_fun_t'
+	and `cmp_result_t' as defined in `cells.h'.
+
+	* test_queue.c: Fixed some comments which referred to the
+ 	obsoleted and discarded `deque.[hc]'.
+
+	* cells.[hc], cells-def.h: Major, though rather superficial
+	cleanups and reorganizations.
+
+Mon Jan 20 13:22:46 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* params.c (expand_tilde): A bug fix in adding null character to
+	terminate strings after a `strncpy' call.
+
+Sun Jan 19 15:41:44 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c: `copy_to_buffer' and `read_from_buffer': Bug, `p'
+	is of type ptr_t, ie. a pointer to a 32 bit word.  Increasing
+	it by amount of chars copied, it will point to a very wrong
+	place for next copy.  Corrected by additional char * `ptr'.
+
+Sat Jan 18 15:01:34 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* insn-def.h: New instruction `branch' added for unconditional 
+	branching.
+
+Fri Jan 17 23:57:24 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* README: Wrote the section on the architechture of Shades, and
+ 	moved it later in the document.
+
+Fri Jan 17 16:17:58 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* params.h: The auxiliary documentation modified to support recent
+	changes made in params.c.
+
+	* params.c (strip_string): A verification, which tests for an empty
+	string after removing leading spaces, added. Comments added.
+
+Thu Jan 16 17:41:29 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* params.c (expand_tilde): Modified to support format "~". If the
+	expandable string does not contain a tilde at the first position,
+	the function now simply copies the original string and returns. 
+	Also code added to confirm that strings have a null character 
+	after strncpy calls.  
+	(load_param_file): Code simplified in selecting resource files.
+	Now the function calls expand_tilde for all three files.
+
+Wed Jan 15 20:05:09 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* bitops.[hc]: Improved comments, added an assert to ILOG.
+
+	* list.[hc] (list_length): Wrote.
+
+Wed Jan 15 17:20:14 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* params.c: Minor changes, based on the comments got from Lars,
+	made. In function replace_character, the NULL verification is
+	modified to assert, a macro for maximum string length,
+	MAX_STR_LEN, added and related changes made elsewhere in the file.
+	In load_command_line_params, the missing `static' word in front
+	of the function name added and also an additional test added to
+	verify whether the char arrays are big enough to hold parameter
+	definitions. 
+	
+Wed Jan 15 13:58:58 1997  Lars Wirzenius  <liw@dionysos.cs.hut.fi>
+
+	* Makefile.in: Added target `wc-semi', which counts lines with
+	semicolons separately.
+	* Added new script count-semicolons that does the actual counting.
+
+Wed Jan 15 11:01:18 1997  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* net.c: `p' was not increased in `read_from_buffer' and
+	`copy_to_buffer', causing potentially overlapped memory
+	copying and thus false data, fixed in both cases.
+
+Fri Jan 10 21:56:16 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Extensive, though rather superficial cosmetic improvements in
+ 	code and documentation, and a handful of fixes to potential
+ 	errors in code.
+
+Wed Jan  8 17:19:00 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* priority_queue.[hc] (pqueue_insert, 
+	                       pqueue_delete_min, 
+			       pqueue_merge) : Wrote and compiled. Didn't
+	test yet. 
+
+Mon Jan  6 11:23:06 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Fixed ChangeLog-messages of `Mon 30' as they had been
+ 	detabulated.
+
+Fri Jan  3 16:19:52 1997  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* trie.[hc] (trie_delete): Changed the interface so that we can
+ 	use an updater-function. Give `NULL' if no updater-function exists
+ 	(and a delete will be performed). Notice that the
+ 	updater-function, if such is used, can't return NULL_PTR as new
+ 	data.
+
+Fri Jan  3 15:44:58 1997  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (return): If `cont' became NULL, then `DIE_CONT'
+ 	instead of `RUN_CONT'.
+
+Thu Jan  2 16:17:38 1997  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* insn-def.h: New instructions `cond_{eq,le,lt}_imm_imm',
+ 	`cond_{eq,le,lt}_imm_pick' and `cond_{eq,le,lt}_pick_imm' added.
+
+Tue Dec 31 13:02:38 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* interp.c (interp): Minor cleanups.
+
+Mon Dec 30 16:21:04 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* insn-def.h: New instructions `cond_{eq,le,lt}_pick_pick' added.
+  	These types of instructions are used to optimize code which has
+ 	simple IF-THEN-ELSE expressions. In this case, both the IF- and
+ 	ELSE-part contain only a single pick instruction. Note that the
+ 	inverse conditions (ne, gt and ge) can be implemented by simply
+ 	swapping the arguments of the corresponding instruction.
+
+Mon Dec 30 05:39:39 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* interp.c (interp): Implemented a faster bcode insn dispatcher
+ 	using gcc's labels as values.  A.k.a. jumps2 in Rossi, Sivalingam,
+ 	"A Survey of Instruction Dispatch Techniques for Byte-Code
+ 	Interpreters", in Oksanen (ed.) "Seminar on Mobile Code",
+ 	Technical Report TKO-C79, Faculty of Information Technology,
+ 	Helsinki University of Technology, 1996.
+                test            orig    new     improvement
+                fib             22.03   13.59   62.10%
+                primes          19.12   9.22    107.38%
+                ulam            21.12   11.89   77.63%
+                mergesort       42.46   25.47   66.71%
+                tpcb            45.52   38.60   17.93%
+	
+	* interp.c (interp): Removed the redundant test `cont != NULL' in
+ 	the dispatcher loop.
+                test            orig    new     improvement
+                fib             22.03   19.76   11.49%
+                primes          19.12   16.83   13.61%
+                ulam            21.12   19.36   9.09%
+                mergesort       42.46   36.32   16.91%
+                tpcb            45.52   41.95   8.51%
+	
+	* interp.[hc]: Enhanced INSN-macros so that all insns have a
+ 	push-melded counterpart.
+	
+	asm_defs.h (asm_insn_t): ASM_NOP added to types.  Associated
+ 	changes elsewhere by adding a case for ASM_NOP in some switches.
+	
+	asm.c (asm_finish_bcode): Implemented a push-melder as a peephole
+ 	optimization.
+                test            orig    new     improvement
+                fib             22.03   20.02   10.04%
+                primes          19.12   17.92   6.70%
+                ulam            21.12   20.34   3.83%
+                mergesort       42.46   38.18   11.21%
+                tpcb            45.52   42.86   6.21%
+	
+	* cells-def.h: Improved commenting.  In particular, specified the
+ 	requirements of the cell size expression and the cell definition
+ 	block.
+
+Tue Dec 17 18:11:08 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* kdqtrie.[hc]: Initiated, associated changes in Makefile.in.
+
+	* slop.ml: Removed, since its actual development has now been
+ 	moved to a parallel directory.  Associated changes in Makefile.in.
+
+Mon Dec 16 16:47:09 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* insn-def.h: New instructions drop_n, lshift_imm and rshift_imm
+ 	implemented.
+
+Mon Dec  2 16:23:22 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* slop.ml: Type `bool_expr' introduced. `If-then-else'
+ 	implemented.
+
+Fri Nov 29 17:48:56 1996  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* test_trie.c: Tests now all possible operations of trie.  
+
+	* trie.c (trie_delete_set): Removed a bug that forgot to update
+ 	the path when, when going down the trie) `node_prefix' was not
+ 	equal to `key_prefix'.
+
+Fri Nov 29 15:45:47 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* slop.ml: `print_int' implemented.
+
+	* Makefile.in: `slop.ml' added to slop's dependency list.
+
+Fri Nov 29 00:28:55 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Makefile.in: Added target `slop'.
+
+	* slop.ml: Imported to the RCS directory.
+
+	* params-def.h (print_insns_are_disabled): Should all printing
+ 	from bcode insns be suppressed?  Defaults to false, but this is
+ 	useful when benchmarking.
+
+	insn-def.h: Associated changes.
+
+	* params-def.h (disk_filename): Changed back to "/test-atlas1".
+
+Thu Nov 28 13:33:19 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Made a distribution called `shades-2.2alpha'.
+
+	* Makefile.in: Added `test_net' to `TESTPROGS' and `test_primes.s'
+ 	to `TESTASMS'.
+
+	* Renamed `primes.s' to `test_primes.s'.
+
+	* interp.c: Added function `init_interp'.  Associated changes
+ 	elsewhere.
+	(load_bcode): If given argument `--show-bcode-ids' or if in
+ 	verbose mode, show the names of bcode sequences and their interned
+ 	ids.
+
+	* insn-def.h: Added some comments.  Reorganizing.  Wrote insn
+ 	`drop', `caar', `cadr', and `cdar'.
+
+	* Makefile.in, asm.c (asm_file): Supports now also other C
+ 	preprocessors that gcc.
+
+	* test_mergesort.s (_merge#2): Removed the erraneous argument to
+ 	insn `pop'.
+
+	* shades.c (free_page): Eased the assertion of the page not yet
+ 	being freed only to non-recovery time.  (Initially, i.e. during
+ 	recover, the vector might contain garbage, so the assertion was
+ 	incorrect.)
+
+	* Makefile.in: Sloppy you, Cessu!  Added `$(ALLOCA)' and
+ 	`$(LIBOBJS)' to the `libshades.a' in addition to them already
+ 	being in the dependencies (they weren't linked).
+
+	* test_asm.c: Don't continue with execution if the byte code
+ 	assembler file appeared reported errors.
+
+	* asm.c, asm_lex.l, asm_parse.y: Better error reporting (gives
+ 	filename and line number), renamings, general cleanups.
+	(asm_finish_bcode): Make cleanups even if errors did occur.
+	(asm_file): Return the value of `errors_have_occurred'.
+	(asm_make_insn): Added a check that the insn is supported a
+	correct number of arguments.
+
+	* configure.in, config.h.in, test_io.c: Added check for and barf
+	lack of `usleep'.
+
+	* io.c (io_write_page): Moved setting `aio_sigevent' behind
+ 	`#ifdef SIGEV_NONE'.  Apparently at least IRIX lacks that field.
+
+	* shades.c (PREPEND_TO_REM_SET): Don't use the faster rem_set
+ 	exhaustion test on non-32-bit machines.
+
+	* io.c: Made POSIX.4-style `aio_write' work.  This included adding
+ 	calls to `aio_return' (otherwise the system run out of resources)
+ 	in function `io_write_root', and adding code to fall back to sync
+ 	writing in `io_write_page' in case of trouble.
+
+	* bitops.[hc]: Renamed `log2' to `ilog2' to avoid name clashes on
+	DEC.  Similarly `LOG2' to `ILOG2'.  Associated changes elsewhere.
+
+	* params-def.h: Discarded `async_shows_write_order'.
+
+	* io.c: Finished the major cleanups.  Most visibly the file-wise
+ 	vector of pending aios was discarded, similarly the chunk-wise
+	mallocation of aio list items.  Numerous micro-cleanups and
+	name simplifications.
+	
+	* io.c, test_io.c: Moved the effect of parameter `io_writes_root'
+	from `io.c' to `test_io.c'.
+
+Wed Nov 27 08:13:54 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (pick_print_cell): Wrote. For non-obtrusive
+ 	debugging.
+
+	* cells.c (cell_check, cell_check_rec): Don't do ptr-checks for
+ 	continuations, since they may well change appearance over time.
+
+Tue Nov 26 18:01:25 1996  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* queue.c : Cleaned up by using primivitives of list.[hc]. Unwound
+	two short for-loops.
+
+Tue Nov 26 17:37:45 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_fulam.s: Wrote and checked in. Fulam (fast ulam) saves and
+	retrieves intermediate ulam values using a trie.
+
+Tue Nov 26 10:30:05 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* list.[hc] (CAR, CDR): Added assertions for listness.  Function
+	calls if non __GNUC__.
+
+Mon Nov 25 20:36:03 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* params-def.h (disk_filename): Set default to `SHADES-DB' instead
+ 	of the raw device until we are convinced the cleanups in `io.c'
+ 	didn't break anything.
+
+	* io.c: Huge, but still only partial cleanups.  Major
+ 	reorganizations in the file's structure.  Discarded over 100
+ 	lines.
+
+	Made `PAGE_INDEX_BITS' definable from one place; other macros
+ 	adapt automatically to it.
+
+	Check for Solaris instead of defining it implicitely; decide
+	depending on `HAVE_SOLARIS'.
+
+	* configure.in: Got rid of Solarisms.  Check the necessary libs
+	when `--enable-async-io'.  Cleanups.
+
+Mon Nov 25 16:47:25 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+ 	* insn-def.h: Instruction copy_word_vector modified to copy
+	also less words than the total number of words from the original
+	vector. For example, `copy_word_vector 3' copies only the first
+	three words from the source vector.
+
+	* test_ulam.s: Fix-ups in number of stack places used in various
+	calls.
+	
+Mon Nov 25 14:51:52 1996  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* insn-def.h: sqrt added.  Takes square root of accu
+	to accu.
+
+	* interp.c: #include <math.h> to the beginning.
+
+	* primes.s: Checked in, works.
+
+Sun Nov 24 02:03:20 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* README: Fixed a handful of typos.
+
+	* interp.c (declare_bcode): Removed.
+
+	* interp.c: Removed the byte code memo table and restored (and
+ 	slightly optimized) the old 2-associative cache, this time with 64
+ 	cache lines.
+	
+Sat Nov 23 02:43:27 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Makefile.in: Some reorganizations regarding targets wc and test
+ 	programs.
+
+	* test_fib.c: Removed.
+
+	* Renamed ABBREVS to README.  Major additions.
+
+	* interp.c (load_bcode): Fixed a bug which caused too little
+ 	`can_allocate': defined `CSW_MAX_ALLOCATION' and added it to
+ 	`BCODE_MAX_ALLOCATION' of all bcodes.
+
+Fri Nov 22 10:09:18 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb.s: Minor optimizations using new instructions.
+
+	* insn-def.h: New instruction `mul_imm' added.
+
+Thu Nov 21 18:11:30 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c (flush_batch): Added some info output about gc
+ 	vs. non-gc writing load if `--enable-gc-profiling'.
+
+Thu Nov 21 17:54:47 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_ulam.s: Optimized using new instructions. Program structure
+	redesigned to match the algorithm given at the beginning of the file. 
+
+Thu Nov 21 16:47:15 1996  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* insn-def.h: Added new instructions sub_imm, add_imm, exch and 
+	cddr.
+
+Thu Nov 21 14:47:08 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (tail_call): Wrote.
+
+Wed Nov 20 16:34:36 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_ulam.s: Initial version implemented.
+
+	* insn-def.h: Stack operator `swap' added.
+
+Tue Nov 19 23:44:04 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* params-def.h (disk_filename): Changed default to `/test-atlas1'.
+
+Tue Nov 19 13:47:01 1996  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* insn-def.h: Added new instructions cons, car, cdr and pritn_list.
+	* list.[hc] (print_list): Wrote.
+
+Mon Nov 18 17:51:28 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* insn-def.h: Arithmetic instructions `div' and `mod' added.
+
+Sun Nov 17 20:23:43 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* cells.c (cell_do_fprint): Moved assertions and loading `p0'
+	below return if desired depth was already reached.
+	(cell_check): Don't assert for still `FIRST_GENERATION_DEADBEEF'ed
+	pointers in the first generation.
+
+	* shades.c (first_generation_fprint): Wrote.
+	(make_first_generation_assertions): Major tweaking.  Added
+	checking for red zones.
+	(allocate): Added creation of red zones.
+	(first_generation_print): Wrote for calling from gdb.
+
+	* list.[hc]: Initiated.  Related changes to `Makefile.in'.
+
+	* params-def.h: Added `first_generation_assertion_heaviness'.
+
+Sun Nov 17 14:31:08 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb.s: Macros introduced. Note that byte-code files are
+	preprocessed by a CPP before execution.
+
+	* test_tpcb.c (tpcb_run): Program output modified to display
+	the number of transactions executed.
+
+	* insn-def.h: New instruction `dup´ added. `get_cell_value' and
+	`set_cell_value' renamed to `get_field_value' and `set_field_value'. 
+
+Fri Nov 15 18:42:26 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb.s: tpcb_run implemented. The source file has to be
+	modified if one wants to change the number of transactions
+	(current value is 10000) executed during a tpcb_run session. 
+	After a successful run, the program prints the updated branch
+	table to stdout. 
+
+	* insn-def.h: Definitions added for new instructions
+	`copy_word_vector', `trie_find', `get_cell_value' and
+	`set_cell_value'. 
+
+Thu Nov 14 20:23:23 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_trie.c (test_trie): Moved calls to `cell_check_rec' to
+ 	inside assertions.
+
+	* trie.h (trie_insert): Changed the interface so that we can use
+ 	an updater-function instead of performing a search and then a
+ 	separate update on the same key.  Give `NULL' if no updater
+ 	function exists.
+
+	Associated changes elsewhere.
+
+	* test_tpcb.c (tpcb_do_one_transaction): Changed to use the
+ 	updater functions `update_{branch,teller,account}'.  Resulted in
+	approximately 10% increase in TPC-B speed.
+
+Thu Nov 14 16:33:17 1996  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* insn-def.h (trie_insert): The length of instruction is 1 instead of 
+	2.
+
+Thu Nov 14 16:06:01 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* insn-def.h: New definitions `init_random', `random_number' and
+	`goto_bcode' added. The instruction `tail_call' renamed to
+	`goto_self'. 
+
+	* test_tpcb.s: Initial version of tpcb_run added.
+
+	* test_fib.s: Optimized by removing an instruction which had
+	no effect in calculating Fibonacci.
+
+Wed Nov 13 19:44:10 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb.s: Modified to create TPC-B tables branch, teller and
+	account. 
+
+	* insn-def.h: New definitions `mul' and `print_table' added. 
+	
+Wed Nov 13 19:23:07 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* insn-def.h (print_cont): Wrote.  Use for heavier debugging byte
+ 	code programs.
+
+	* interp.c (load_bcode): Bcodes are of type CELL_bcode, not
+	CELL_word_vector.
+
+Tue Nov 12 19:06:01 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_tpcb.s: A handful of changes and fixes.
+	
+	Whoa!  We can create the TPC-B branches table with byte code asm,
+ 	e.g.  `./test_asm test_tpcb.s tpcb 100'.
+	
+	* insn-def.h (make_word_vector): Bug, copied off-by-one from stack
+	to the result vector.
+
+	* insn-def.h (get_root_ptr, set_root_ptr, beq, bne, blt, bne):
+ 	Wrote.
+
+	* insn-def.h (trie_insert): Bug.  `max_allocation'-field should
+ 	naturally have been `TRIE_MAX_ALLOCATION', not 0.
+
+	* interp.c (interp): Bug.  Condition for copying the continuation
+ 	frame was incorrect;  we copy if it IS reusable.
+
+Tue Nov 12 17:12:26 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* insn_def.h: Definitions added for the following instructions:
+	`pop', `bge', `print_cell', `make_word_vector', `trie_insert' and
+	`tail_call'. The definition of `call' instruction modified to
+	handle additional arguments.
+
+	* test_tpcb.s: Initial steps towards a byte-code version of TPC-B
+	benchmark taken. 
+
+Tue Nov 12 16:33:46 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* asm_lex.l, asm.c: Added knowledge of root pointers to the
+ 	assembler, e.g. `Rtest_branch'.
+
+Tue Nov 12 14:12:07 1996  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* string_intern.[hc]: Inserted and fixed some comments. 
+	(string_fprint): Wrote. 
+	(string_max_allocation): Inserted one `wordt_t' to the result. 
+	So now the function returns the total amount of memory that will 
+	be needed to convert a string to word_vector.
+	(char_ptr_to_string): Replaced the function call 
+	string_max_allocation with sentences that computes the same thing.
+	
+Sun Nov 10 16:15:52 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* test_asm.c, test_fib.s: A generic test loader and an example
+	assembler file.  Issue, e.g. `./test_asm test_fib.s fib 30'.
+
+	* insn-def.h: Added a `max_allocation'-field to all insns.  For
+ 	calls this is the size of the largest legal continuation frame,
+ 	currently ~255 words (see `interp.h').
+
+	Some cleanups in `INSN_call'.
+
+	* interp.c: Moves `BCODE_X'-macros to interp.h.
+ 	
+	(interp): `flush_bcode_cache' before commencing any insns.
+
+	(load_bcode): Wrote.  It imports raw byte-code arrays to Shades
+ 	and computes some values, e.g. max allocation.  To be melded with
+	`declare_bcode' once the details of bcode-caching and assembler
+	functionality have been settled.  `declare_bcode' is now retained
+	only for backward compatibility with `test_fib.c'.
+
+	* obstack.[hc]: Imported from libiberty.  These files are under
+ 	GPL, so they must be replaced or rewritten (e.g. Shadows'
+ 	snobstack.{h,cc}) before commercial binary-only distributions.
+
+	* asm.[hc], asm_defs.h, asm_parse.y, asm_lex.l: New files.  These
+ 	implement a sketchy quick-and-dirty hack of the byte code
+ 	assembler in order to prototype the design.  Most of the
+ 	functionality should, however, be present.  No peephole
+ 	optimizations yet.
+
+	Note that some parts of the code above is rather similar to what I
+ 	have used in an Alpha-simulator a few years before.  The 
+
+	* Makefile.in: New source files `asm.[ch]', `asm_defs.h',
+ 	`asm_lex.l', and `asm_parse.y', and imported code `obstack.[hc]'.
+  	Flex and bison rules and some interdependencies for these.  Other
+ 	minor reorgs.
+
+	* cells-def.h (cont): Minor cleanups related to `word_type_t'.
+  	Added some comments on the role of the `p0' in continuation cells.
+
+	* cells.h (word_type_t): Wrote.
+
+Fri Nov  8 13:48:38 1996  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* trie.c (trie_insert_set): Wrote and compiled.
+
+Fri Nov  8 01:21:28 1996  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* test_net.c: checked in.
+
+Thu Nov  7 15:41:34 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* cells.h (cmp_result_t, cmp_fun_t): Defined these types.
+
+Wed Nov  6 12:06:43 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* test_tpcb.c (tpcb_run): Displaying latency information is
+	discontinued after the value of `cumulative_latency' reaches the
+	maximum number of latencies.
+
+Wed Nov  6 00:32:06 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* shades.c: Reintroduced `number_of_written_bytes', but now it is
+ 	updated cheaply in `write_page', not in the time-critical garbage
+ 	collector.
+
+	`GC_PROFILING' contained some outdated code that no longer even
+ 	compiled.  Brought up to date.
+
+Tue Nov  5 18:49:08 1996  Sirkku-Liisa Paajanen  <sirkku@dionysos.cs.hut.fi>
+
+	* trie.c (trie_delete_set): Fixed a bug: Function didn't return 
+	anything in cases where the root has only one son.  
+
+Thu Oct 31 02:22:25 1996  Antti-Pekka Liedes  <apl@dionysos.cs.hut.fi>
+
+	* params-def.h: New parameter `listen_port' for the port
+	number that the shades server listens to.
+
+	* test_net.c: Basic network code test driver written.
+
+	* net.c: Several bug fixes.
+
+	* Network bind, listen, and read work.
+
+	* net.c: Still more bug fixes on buffer handling.  No warnings
+	anymore.
+
+Mon Oct 28 14:48:48 1996  Sivalingam Kengatharan  <siva@dionysos.cs.hut.fi>
+
+	* params.c: Various minor fixes: `strip_string' returns a NULL if
+	there is no string to strip, formats like "1.5M" are now accepted
+	as legal integer values and a bug fix in `verfy_integer_format' 
+	(boolean false: 0 is now correctly assigned to `*int_value' instead 
+	of `int_value').
+	
+	* test_tpcb.c: Minor fixes for errors reported by -Wall: 
+	e.g., unused variables.
+
+Sun Oct 27 19:39:00 1996  Kenneth Oksanen  <cessu@dionysos.cs.hut.fi>
+
+	* Numerous details cleaned up all over Shades.
+
+	* string_intern.h: Added `string_max_allocation' to the header.
+
+	* trie.[hc], test_trie.c: Renamed `simple_trie_XXX's to
+ 	`trie_XXX's.  Removed the `missing_cell' extra parameter and
+ 	checking for sufficient recovery.  Numerous associated changes all
+ 	over Shades.
+
+	* shades.c (update_persistent_page_info): Changed return value
+	type to void.
+
+	* cells-def.h: Renamed `CELL_simple_trie' to `CELL_quad_trie'.
+
+	* shades.c: Switched to use the basic trie.
+
+	* basic_trie.[hc]: Split from simple_trie.[hc].  Dropped all
+ 	except the basic tools from it.
+
+	* test_queue.c: Removed references to the old deque.
+
+	* deque.[hc]: Removed from the distribution.  Related changes in
+ 	Makefile.in.
+
+Fri Oct 25 16:07:35 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* test_tpcb.c: All output, except the final tps- and latency-
+	result, are now hidden behind the parameter `verbose_mode'. A new 
+	argument, `--show-progress', added to switch on the test progress 
+	(shows the total number of executed transactions). The display 
+	widths of latency and cumulative latency expanded by 2 characters. 
+
+	* params.c: Parameter handling for `verbose_mode' added; in
+	addition to ordinary options, verbose mode could be set on by
+	giving "--show-params", "-v" or "--verbose" argument. Minor
+	cleanup done in comparing different name formats in function
+	`set_param_value'. Function `get_suffix_value' modified to use
+	1000 as the base number instead of 1024 for double value
+	parameters. Comments added.
+
+	* params-def.h: New parameter `verbose_mode' added. The type 
+	of parameter `max_latency_measurement' changed to double.
+
+Thu Oct 24 16:29:46 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* test_tpcb.c: `tpcb_run' and `tpcb_do_one_transaction' modified
+	to compute and display flush-batch latency statistics. 
+
+	* params-def.h: Two new parameters introduced for measuring
+	flush-batch latencies during TPC-B tests: `max_latency_measurement'
+	and `number_of_latency_measurement_intervals'.
+	
+Tue Oct 22 21:38:48 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* params-def.h (io_writes_root): Set default to 1 (yes).
+
+Mon Oct 21 16:25:12 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* root-def.h: Removed `suspended_context' since it is no longer
+	needed due to the below.
+
+	* interp.c (interp): Switched to use Sirkku's real-time queues; in
+ 	practice removed a handful of lines that gc-protected and
+	gc-recovered context queue management.
+
+Thu Oct 17 18:00:12 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* queue.c (queue_insert_last, queue_remove_first): Tested.
+
+Mon Oct 14 14:09:55 1996  Antti-Pekka Liedes  <apl@shadows.cs.hut.fi>
+
+	* io.c (io_write_page): Fixed yet another memory allocation
+	bug.  Reallocs correctly now (stupid me).
+
+Mon Oct 14 04:51:15 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* Makefile.in: Major cleanup.  Removed duplicate definitions.  The
+	generated Makefile should now also work in other `make's except
+	GNU make.
+
+Sat Oct 12 20:08:47 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* interp.c (interp): Moved `priority' from a local variable to a
+ 	parameter for the function.  Related changes in `interp.h' and
+ 	`test_fib.c'.
+
+	* io.c (io_init): Fixed a blatant bug; `db_file' was `malloc'ed
+ 	only room for `number_of_db_files' pointers, not `db_file_t'
+ 	structs.
+	
+	* interp.c: Replaced the 16-line 2-associative cache with a memo
+ 	table. This improved performance by some 5% on the fib30-test,
+ 	but probably more in larger systems where the hot set of bytecode
+ 	sequences is much larger than what would have fit in the old
+ 	cache.
+
+	* shades.c (finish_gc): Fixed a possible bug by adding the setting
+ 	of `page_info[..].free_index' also in `finish_gc'.  Lack of this
+ 	may have caused too long or short disk writes, i.e. unrecoverable
+ 	disk images.
+
+Sat Oct 12 13:27:16 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* queue.c (queue_insert_last, queue_remove_first): 
+	Wrote and compiled.
+
+	* cells-def.h: Added a new cell type `queue_rev' which is like
+	`queue', except that it has also pointers to lists needed in 
+	reversal process. 
+
+Sat Oct 12 12:58:21 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* interp.c: Added support for insns that allocate unbounded
+ 	amounts of memory.  Commenting.
+
+	* interp.c: Cessu, you fat idiot!  Forgot a `!' from before
+ 	`..._ACCU_IS_SCALAR'.  This bug in turn caused a scalar value to
+ 	be treated as a pointer (and vice versa) in the garbage collector.
+
+Fri Oct 11 00:06:29 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* cells-def.h: Fixed a few typos, `DECLARE_WORD' has no `A', which
+ 	prevented compiling the code.
+
+Thu Oct 10 14:28:01 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* cells-def.h: Added a new cell type `queue' that contains
+	pointers to the head-list and tail-list and two counters, which 
+	denote the numbers of keys in lists.
+
+	* queue.[hc], queue.c: New files.
+	Associated changes in `Makefile.in'.
+
+Wed Oct  9 12:35:54 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* shades.[hc]: Added global variable `commit_group_count' which is
+ 	currently used in `interp.c' to check whether the bcode cache
+ 	needs to be flushed.  These are, hopefully, temporary until we
+	have real-time queues.
+
+	* interp.c: Wrote a 2-way-associative cache that caches mappings
+ 	from `bcode_id's to `bcode_ptr's.  On the "(fib 30)"-test the
+ 	required time dropped approximately 25-30%.
+
+	Associated changes in `insn-def.h'.
+
+Wed Oct  9 09:35:48 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* params.h: Added parameter `jiffies_between_yields' with default
+ 	value 100.  This particular value gives approx. 50% better
+ 	performance than switching contexts at every continuation switch.
+	
+	* interp.c: Added a jiffy-counter that counts the number of
+ 	continuation switches between context switches.  By not switching
+ 	contexts in every continuation switch we get better interpreter
+ 	performance, yet without considerably sacrificing responsivity.
+
+	Associated changes in `insn-def.h'.
+
+	Added "stem" bcodes `bcode_call_fib_[45]' in `test_fib.c'.
+
+Wed Oct  9 08:06:59 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+	
+	* interp.c: Added context switching (anything under the label
+ 	`yield_cont').  Four levels of priorities.
+	
+	* insn-def.h: Added insns `print_int' and `die'.  Minor changes in
+ 	some other insns.
+
+	* root.h: Added `[SG]ET_ROOT_{WORD,PTR}_VECTOR'.
+
+	* root-def.h: Added the ptr vector `contexts' and the temporary
+ 	`suspended_context'.
+
+	* cells-def.h: New cell type `context', which contains the
+	continuation ptr and accu of the byte code interpreter.
+
+Fri Oct  4 11:51:06 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* Makefile.in: Added `net.[hc]' to target `libshades.a'.
+
+Thu Oct  3 10:14:48 1996  Antti-Pekka Liedes  <apl@shadows.cs.hut.fi>
+
+	* net.[hc] checked in.  May not work, but compile ok.
+
+Mon Sep 23 18:02:30 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* priority_queue.[hc], test_priority_queue.c: New files.
+	Associated changes in `Makefile.in'.
+
+	* simple_trie.h: Removed nested inclusion of `simple_trie.h'.
+
+Mon Sep 23 15:10:42 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* simple_trie.c (simple_trie_delete_set) : Every node in the trie
+	is allocated at most once during this operation. 
+	Memory that will be needed at most is 1 simple_trie-node for 
+	the root + 15 * `number_of_keys' nodes. The exact amount of memory
+	is union of all the nodes in the paths of the keys of the given
+	key vector i.e. as mentioned before, if a node is common for two
+	or more paths, it is allocated only once.
+	
+Tue Sep 17 16:19:58 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* test_tpcb.c (tpcb_run): The test driver of TPC-B rewritten. The
+	new version generates random ids for a set (current size is 2048) 
+	of transactions and save them into a table before starting updates. 
+	Now the time spent on updates is measured only before and after 
+	executing the entire set instead of each and every transaction.  
+
+	* test_tpcb.c: Most of the program output messages are now
+	directed to `stderr' instead of `stdout'.
+	
+Thu Sep 12 18:14:38 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* simple_trie.c (simple_trie_delete_set): Compiled and
+	tested. Doesn't work correctly yet. Notice that function name has
+	changed from _delete_group to _delete_set.
+
+Wed Sep 11 13:02:23 1996  Antti-Pekka Liedes  <apl@shadows.cs.hut.fi>
+
+	* io.c (io_{open,create}_file): Now reset the round-robin
+	cursor `db_file_cursor' to zero.  Without this, writing failed
+	with quite mysterious 'bad file number' on some occasions.
+
+Fri Sep  6 16:38:17 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* simple_trie.[hc] (simple_trie_delete_group): Started to wrote.
+
+Wed Sep  4 23:19:19 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* deque.[hc], test_deque.c: Wrote tentative, non-real-time
+	queues.
+
+	Associated changes in files `Makefile.in', `cells-def.h'
+	(CELL_deque), and `root-def.h' (deque_tmp[12]).
+
+	* shades.c (init_shades): Added a test that
+	`first_generation_size >= PAGE_SIZE'.
+
+Sun Sep  1 23:30:03 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* Made a distribution called `shades-2.1alpha'.
+
+Wed Aug 28 12:48:58 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* string_intern.c (string_max_allocation): Optimization: Replaced
+	a library function strlen with for-loop that computes the length
+	of the string. 
+
+Tue Aug 27 22:25:39 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* shades.c (major_gc): Fixed an assertion; `effort_step' is
+ 	allowed to be zero, though not negative.
+
+Tue Aug 27 10:39:17 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* cells-def.h: Inserted a new cell type string_id_list. Necessary
+	when interning strings.
+
+	* string_intern.h: STRING_MAP_MAX_ALLOCATION is now
+	SIMPLE_TRIE_MAX_ALLOCATION + 4. That 4 word_t's will be needed
+	when allocating and inserting a string_id_list into the trie.
+ 	
+	* string_intern.c: The collision list now consists of string_id_list 
+	cells.
+	
+Thu Aug 22 23:26:45 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* interp.c (interp): Fixed a bug: some `BCODE_...'-macros were
+ 	given `cont' arguments, which eventually resulted in too little
+ 	preallocation. (Problems like that would not occur if we could
+ 	access cells as strongly typed C structs.)
+
+	* shades.c (clear_first_generation): Some recent cleanups
+ 	apparently cleaned away the rewinding of
+ 	`first_generation_can_allocate_ptr' (see Tue Aug 6 1996).  Brought
+ 	back the rewind.
+
+Thu Aug 22 16:05:49 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* test_tpcb.c (tpcb_do_one_transaction): Bug fix:
+	`current_history_length' is now correctly reset to 0 after 
+	it reaches maximum number of records. Comments added.
+
+Wed Aug 21 07:26:51 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* interp.[hc], insn-def.h, test_fib.c: Partial vc-registration of
+ 	new code that implement the byte code interpreter.
+
+	fib(30) = 1346269
+
+	* Makefile.in: Added compilation rules for the new files and the
+	target `test_fib'.
+
+	* cells-def.h (cont): Removed `+ 1' from the second field.
+
+Mon Aug 19 20:56:58 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* root-def.h: Added `suspended_cont', `suspended_accu', and
+ 	`bcodes'.
+
+	* shades.c: Cleanups in verbose output.  Now only error messages
+ 	go to `stderr', normal diagnostics go to `stdout'.
+
+	* Makefile.in: Added `test_strings.o' to `TEST_OBJS'.  Its
+ 	omission caused some linking errors.
+
+Mon Aug 19 15:32:10 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* test_tpcb.c: History table update implemented. The printing
+	format of `tpcb_run' modified to use one line output. The function
+	`print_table' now outputs only the last record, if the table choice 
+	is History. 
+
+	* params-def.h: New parameter `test_tpcb_history_length' added.
+
+	* cells-def.h: Cell definition `test_tpcb_list' removed. `list' 
+	and `word_vector' are now used to generate the list needed by the
+	history table of TPC-B.
+
+Mon Aug 19 01:09:39 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* shades.c (choose_major_gc_generations, major_gc_step, major_gc):
+ 	Some minor cleanups.  Changed screen output format to a more
+ 	concise one.
+
+Sat Aug 17 11:31:33 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* shades.c (IS_IN_GENERATION, choose_major_gc_generations,
+ 	major_gc): Cleanups.
+
+	* shades.c: Optimizations in the garbage collector, particularly
+ 	`rec_copy_cells':
+
+	Dropped the counter `number_of_copied_bytes'.
+
+	Wrote a new set of remembered set tools.  While the old rem_set
+ 	was a linked list with 3 remembered pointers in each list node,
+ 	the current list contains an arbitraryly long vector.  The old
+ 	code used a bisection test against NULL within the little node to
+ 	find an empty slot, the new code uses a counter
+	`rem_set_allocation_ptr' in the `generation_info's.  In addition
+	`rec_copy_cells', this speeded up also `major_gc_step's scan
+	through the rem_set (a dropped from 5.5 to 1.5 CPU-%).
+
+	Made `PREPEND_TO_REM_SET' a highly optimized macro.
+
+	`rec_copy_cells' *always* copies the cell given as its argument.
+  	The callee must ensure cells not yet ready for copying are not
+ 	passed to `rec_copy_cells'.  Assorted changes in
+ 	`collect_first_generation' and particularly `major_gc_step'.
+
+	A handful of other low-level optimizations in `rec_copy_cells'.
+
+	All in all, these optimizations resulted in a 7-10% improvement in
+ 	TPC-B with a utilization of 0.3 tps/MB.  The higher the
+ 	utilization, the larger the improvement.
+
+	* params-def.h (disk_skip_nbytes): Changed default from 0 to 1MB.
+
+	* configure.in: Added option `--enable-gprof'.
+
+Fri Aug 16 15:37:14 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* test_tpcb.c (tpcb_run): Minor cleanup; `time_out()' and
+	`one_tr_duration' are inlined. 
+
+Fri Aug 16 01:33:51 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* test_strings.c (test_strings): Bugfix.  Removed a dangling
+ 	reference over a call to `flush_batch'.
+
+Thu Aug 15 16:33:09 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* test_tpcb.c: Bug fixes: During table updates, data of an old 
+	simple_trie node is copied and the new cell is modified
+	before insertion. During tpcb-run, `flush_batch' is now called 
+	only once, if needed, in the beginning of transactions. In 
+	`insert_records', `can_allocate' arguments modified to get 
+	correct number of cells.
+
+Thu Aug 15 14:19:23 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* test_strings.c: Wrote and compiled. 
+
+	* string_intern.c (string_intern): Instead of inserting 
+	CELL_string_interns to the collision list the function now inserts 
+	CELL_lists + CELL_word_vectors (the CELL_list has a pointer 
+	to the CELL_word_vector that contains the string and the word_t).
+	Removed a bug:
+	Forgot that the cells are immutable. Now the function allocates
+	new cells when making changes to the collision list. 
+	
+Thu Aug 15 13:01:13 1996  Antti-Pekka Liedes  <apl@shadows.cs.hut.fi>
+
+	* io.c: clean ups and added documentation.
+
+Thu Aug 15 06:04:13 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* shades.c (can_allocate): Fixed a bug in the fail-fast code;
+ 	`can_allocate' always moved `first_generation_can_allocate_ptr' to
+ 	the point of last request, although it should have retained the
+ 	largest request.
+
+	* string_intern.c: Moved calls to `cell_check' inside
+ 	`assert(..)'s.
+
+Wed Aug 14 15:43:53 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* cells-def.h: New cell definition `test_tpcb_list' added.
+
+	* root-def.h: Root definitions added for TPC-B tables. 
+
+	* test_tpcb.c: TPC-B test for Shades at cell-level. First version
+	checked-in. 
+
+	* Makefile.in: Rules added for `tpcb_test'. 
+
+Fri Aug  9 13:39:40 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* string:intern.c (string_intern, string_is_interned): Wrote and
+	compiled. 
+
+Thu Aug  8 14:45:13 1996  Antti-Pekka Liedes  <apl@shadows.cs.hut.fi>
+
+	* io.[ch]: Disk striping done.  disk_filename may now contain
+	several filenames separated by ',', IO layer uses a round-robin
+	to write to all of these files.
+
+	* io.c: POSIX.4:fied.  Some kludges to get it to work for Solaris 2.5,
+	because Solaris actually does not support POSIX.4 asynchronous IO.
+
+Thu Aug  8 08:07:11 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* shades.c (free_page, allocate_page, free_old_disk_pages):
+ 	Rewrote again the management of free pages.  The current solution
+ 	is based on the older version (revision 1.33) where `page_info's
+ 	do store the current and previous disk page number.  The old
+ 	code's problem was that it didn't initialize the
+ 	`current_disk_page' correctly (now initialized to
+ 	`INVALID_DISK_PAGE_NUMBER' in `create_db') and that
+ 	`free_old_disk_pages' didn't check for `INVALID_DISK_PAGE_NUMBER's.
+
+	Furthermore, over revision 1.33, maintain a
+ 	`list_of_recently_freed_pages' for pages that have been freed
+ 	during the current commit group.  `free_old_disk_pages' moves them
+ 	to the `list_of_free_pages' and frees their disk images, which in
+ 	turn allows the disk consumption to shrink, thereby decreasing
+ 	disk fragmentation.
+
+	Restored `params-def.h' defaults to reflect the current
+	memory-conserving free page manager.
+	
+	Cleanups.
+
+	* shades.c (update_persistent_page_infos): Noticed and fixed a
+ 	problem caused by using the local variable `pn' to keep the value
+ 	of the global variable `list_of_changed_pages', and forgetting to
+ 	update `pn' accordingly when `collect_first_generation' was
+ 	called.  This may eventually have lead to the database image not
+ 	being actually recoverable.
+
+Wed Aug  7 14:07:14 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* simple_trie.c (simple_trie_delete): Removed two bugs: 
+	
+	A first bug: In the beginning of the first loop is a check 
+	if `p' is NULL_PTR, which means that the key has lead to 
+	NULL_PTR and so doesn't exist. Instead of returning NULL_PTR 
+	then, which makes the tree empty, the function now returns the 
+	initial root and restores the allocation point. 
+	A second bug: It may happen that we get through the loop, even 
+	if the key doesn't exist. Instead of assuming then that `p' 
+	points to the data, the function now checks if the data exists 
+	and if not returns as told below. 
+
+	* string_intern.h (string_max_allocation): Removed to
+	`string_intern.c'.  
+
+Tue Aug  6 16:59:37 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* cells.c (cell_check, cell_check_rec): Applied to some practice,
+ 	added tests for pointer alignment, and removed some obsolete
+ 	assertions.
+
+	* shades.c (free_page, really_free_pages): Changed the structure
+ 	of lists of free pages.  Now, when a page is freed it goes to
+ 	`list_of_recently_freed_pages', and at the end of the commit
+ 	group, they are moved to `list_of_freed_pages', and their disk
+ 	pages are freed.  `page_info_t.previous_disk_page_number' removed
+ 	as obsolete.
+
+	It is unclear though possible, but the old page list organization,
+ 	taken from previous versions of Shades where destructive updates
+ 	were legal, may have been a source of weird errors observed
+ 	occasionally.
+
+	Associated changes in other places, most notably `create_db' and
+ 	`write_page'.  Also changed the defaults in `params-def.h' to suit
+ 	the current version better (we consume a little more memory now).
+
+	* shades.c (clear_first_generation): Added rewinding of
+ 	`first_generation_can_allocate_ptr'.  The check became thereby
+ 	more aggressive.
+
+	Associated fixes in test_gc.c and shades.c
+
+Mon Aug  5 19:10:41 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* cells-def.h: Added a new type `string_intern'.
+
+	* string_intern.c (hash_word_vector, char_ptr_to_string, 
+	string_to_char_ptr, word_vector_cmp, string_intern, 
+	string_is_interned: Wrote.
+
+	* test_simple_trie.c: Made some changes and found a bug in
+	`simple_trie.c' but not the reason.
+
+Mon Aug  5 04:59:00 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* test_gc.c (main, update): Added option `--scatter' which hashes
+	the keys over the domain of the `word_t'.
+
+Thu Aug  1 14:49:26 1996  Antti-Pekka Liedes  <apl@shadows.cs.hut.fi>
+
+	* Writing functions now make sure that number_of_bytes is
+	  at a defined boundary (currently 512) for raw disks.
+
+Thu Aug  1 12:49:40 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* root.[hc], root-def.h: Wrote.  `root-def.h' defines the contents
+ 	of the root block, and `root.[hc]' some tools for handling it.
+
+	Changed rest of the code, particularly shades.c, test_gc.c, and
+	test_simple_trie.c to use the current root block management.
+	(The low-level test_io.c doesn't use either shades.c or root.[hc].)
+
+	* simple_trie.c (simple_trie_insert, simple_trie_delete): Memory
+ 	optimization.  `ap = get_allocation_point()' when entering the
+ 	function, and `restore_allocation_point(ap)' when exiting in cases
+ 	that caused no change in the tree: the item to be deleted was not
+ 	present, the data to be inserted was already inserted and
+ 	identical, or the database was not sufficiently recovered.
+
+Tue Jul 30 19:15:37 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* Added compiling and linking `string_intern.o'.
+
+	* string_intern.[hc]: Initiated these files, wrote prototypes for
+ 	`char_ptr_to_string', `string_to_char_ptr', `string_intern', and
+ 	`string_is_interned'.  Write `str_hash' in string_intern.c.
+
+Tue Jul 30 19:02:37 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* simple_trie.c (simple_trie_find_at_least): Removed a bug 
+	that forgot to insert the prefix in the key when climbing
+	back along the path ends. Tested.
+
+	* test_simple_trie.c: Wrote, compiled and tested 
+	`avl_find_at_least'. Changed the function name `avl_search'
+	to `avl_find'.  
+	
+Sun Jul 28 00:40:19 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* cells-def.h: Added cell types fun, env, bcode, and cont, all to
+	be used int the bytecode interpreter.
+
+	* shades.c (rec_copy_cells): Fixed a comment; we do allow
+ 	intra-generation cycles.
+
+	* cells.[hc] (cell_copy): Wrote.
+
+Thu Jul 25 15:47:20 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* simple_trie.c: Wrote and compiled `simple_trie_find_at_least'.
+
+	Changed the function name `min' to `find_min'.
+
+	* test_simple_trie.c: Wrote, compiled and tested `avl_find_min'. 
+	Inserted lines that check if `avl_find_min' and `min' of 
+	`simple_trie.c' finds the same minimum from the identical set 
+	of keys.
+
+	* simple_trie.c: Wrote, compiled an tested small function `min'
+	that finds the smallest key in the given trie. 
+
+Wed Jul 24 15:07:39 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* test_simple_trie.c: Fixed some typos; clarified some macros.
+
+	* simple_trie.c (simple_trie_delete): Return the old root (instead
+	of NULL_PTR) when unsuccessful.
+
+	Optimizations: Return immediately when climbing upwards reaches a
+ 	node with two or more sons.  Grouped `path' and `ix' together to a
+ 	struct, and decreased the array's size.
+	
+	A handful of cleanups and simplifications.  Fixed typos in
+ 	comments and removed some duplicate comments from the first loop
+	(they are already in `simple_trie_insert').
+
+Mon Jul 22 15:37:35 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* params.c: More comments added and the argument names of
+	`remove_word_separator()' modified.
+
+Fri Jul 19 16:49:51 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* simple_trie.c: Removed some bugs from `simple_trie_delete()'. 
+	Also cleaned function and added more comments.  
+
+Fri Jul 19 14:57:57 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* params.h: An auxiliary documentation explaining parameter
+	implementation and handling added. 
+
+Thu Jul 18 11:14:28 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* params.c: The function `verify_env_value()' wrote to test various
+	formats of environment variables. The functions `get_no_undescore()'
+	and `replace_minus_with_underscore()' modified and given new names
+	(remove_word_separator, replace_character) in order to serve
+	different types of arguments. In `set_param_value()', a bug 
+	(the function exits, instead of looping the entire parameter list,
+	after a successful `getenv()' call) was fixed. The static
+	functions of this file were rearranged.
+
+Wed Jul 17 18:01:48 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* simple_trie.c: Compiled and tested an iterative version of
+	`simple_trie_delete()'.
+
+Wed Jul 17 12:55:00 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* params.c: More comments added. Variable and function names
+	modified to adopt the style defined in ABBREVS. Function
+	`get_suffix_value()' modified to accept a format identifier
+	argument. Function `replace_minus_with_underscores()'
+	added. In function `load_command_line_params()', error handling
+	code altered to print more specific error messages. 
+
+Wed Jul 17 10:35:18 1996  Antti-Pekka Liedes  <apl@shadows.cs.hut.fi>
+
+	* params-def.h, io.c, test_io.c: Some more parametrisations
+	for IO benchmarking.
+
+Wed Jul 17 00:32:45 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* params.h, params-def.h, io.c: Made parameters of the last of the
+ 	old ones, `DISK_FILE_PERMISSIONS' and `DISK_FILE_GROUP'.  Don't
+	commence the `fchmod' and `fchown' unless these parameters are
+	non-negative.
+
+	* shades.c: Now, instead of an undocumented compile flag
+	(-DNOISY), if either `-v', `--verbose', or `--show-groups' is
+ 	given, then print messages resulting from individual commit groups
+	(in [brackets]) and mature garbage collections (in {braces}).
+
+	* params.h: Moved the parameter-dependent definitions of
+ 	`NUMBER_OF_PAGES' and `NUMBER_OF_DISK_PAGES' to variables in
+ 	shades.c and io.c respectively.  (The gradually obsoleting
+ 	test_io.c uses the old macros.)
+
+	* Got rid of `make_assertions_about_X'-functions; they never grew
+	beyond a few lines, and now that we have parameters, we can't
+	`assert', but we must check with normal code.
+
+	* params.c (load_param_file): Fixed a bug that left `errno' set
+	unless `./.shadesrc' was found.
+
+Tue Jul 16 19:06:07 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+        * simple_trie.c: Tested recursive function `simple_trie_delete()'.
+        Started to write iterative version.
+
+Tue Jul 16 15:18:46 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* params.c: Comment line handling added. PARAMS_ENV_PREFIX
+	removed. 
+	
+	* params.h: PARAMS_ENV_PREFIX added.
+
+Tue Jul 16 12:25:21 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* params.c: New integer formats hex and octal added. Environment
+	variable handling modified to accept a predefined prefix. More
+	error checkings, bug fixes and cleaning.	
+
+Mon Jul 15 20:16:16 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* test_io.c: Allocate `page_location_on_disk' dynamically.
+
+	* io.c: Use the new parametrization.  In particular, allocate
+ 	`disk_page_status' dynamically.  Wrote `io_init()'.
+
+Mon Jul 15 17:51:47 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* params.c modified to accept new integer, double and string
+	formats. Minor bug fixes.
+
+Mon Jul 15 15:32:11 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* Imported new parametrization system to the rest of Shades.
+
+Mon Jul 15 15:31:21 1996  Sivalingam Kengatharan  <siva@shadows.cs.hut.fi>
+
+	* params.[hc], params-def.h: Wrote.  Auxiliary documentation will
+ 	follow.
+
+Sat Jul 13 02:33:42 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* configure.in: Fixed defining `PAGE_SIZE'; it forgot to multiply
+ 	by 1024 to convert the user-given value to kilobytes.
+	
+	* shades.c: Steps towards the new parametrization system: Made
+ 	various statically allocated structures dynamic so that they can
+ 	accept varying parameter values in `init_shades' instead of
+	requiring recompilation.
+
+	params.c: Wrote `read_params()' as a dummy for what is to be.
+
+	* shades.c, params.*, and test_*.c: Changed initialization calls.
+  	They are documented at the end of `shades.h'.
+
+Thu Jul 11 08:13:39 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* Makefile.in: Fixed rules for targets `configure', `Makefile',
+	and `config.status' so that automatic recreatation of the
+	outdated files should now occur whenever any of the *.in-files has
+	changed.
+
+	* params.c (make_assertions_about_params): `PAGE_SIZE' no longer
+ 	asserted to be a power of 2, but checked with normal application
+ 	program code in `shades.c' in function `shades_init'.
+
+	* configure.in: Added flag `--enable-page-size=X' for defining
+ 	PAGE_SIZE.
+
+	* io.c: Only if `ASYNC_SHOWS_WRITE_ORDER' is non-zero, then show
+	the write order messages.
+
+	Enabled root block writing.
+
+	* params.h: Added parameter `MAX_NUMBER_OF_PARTIAL_GCS' and
+ 	`ASYNC_SHOWS_WRITE_ORDER'.
+
+	Removed parameter `PAGE_SIZE'.
+
+	* shades.c (major_gc_step): Partial cleanup.  Moved some of the
+ 	code to `choose_major_gc_generations'.
+
+Wed Jul 10 10:37:37 1996  Sirkku-Liisa Paajanen  <sirkku@shadows.cs.hut.fi>
+
+	* Wrote AVL-tree operations `avl_search', `avl_insert', `avl_delete', 
+	`simple_rotate_left', `double_rotate_left', `simple_rotate_right', 
+	`double_rotate_right'.
+
+	* Inserted operations to `test_simple_trie.c'.
+
+Tue Jul  9 15:56:13 1996  Antti-Pekka Liedes  <apl@shadows.cs.hut.fi>
+
+	* Writing of root block currently disabled, will use another
+	  scheme on it later.  io_write_root() still syncs data on disk.
+
+Mon Jul  8 00:08:49 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* cells.[hc] (cell_check, cell_check_rec): Wrote.
+
+Fri Jul  5 03:24:00 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* ABBREVS: Mind-flowed some text about the naming styles we've
+ 	chosen.  The intention is that this file will eventually grow to
+ 	become a README that serves as an introduction to the
+ 	implementation.
+
+	* cells.c (cell_is_equal): Wrote.
+
+	* shades.[hc]: Wrote `{get,restore}_allocation_point'.
+
+	* shades.c: Jumbo cleanups, reorganizations, and renamings
+ 	practically everywhere except for `major_gc' and `major_gc_step'.
+
+	Renamed `xxx_list's as `list_of_xxx's, `xxx_page_map's as
+ 	`xxx_persistent_page_info's, etc.
+
+	Removed macro `PTR_TO_PAGE_PTR' and its demacrofied counterpart.
+
+	* shades.[hc]: Removed `intra_batch_collect' from the external
+ 	interface and renamed it `collect_first_generation' in shades.c.
+  	This way we can ascertain that `copy_stack' won't overflow.
+  	Furthermore repetitively calling `intra_batch_collect' instead of
+ 	`flush_batch' would have jeopardized response times, and therefore
+ 	been a questionable practice in any case.
+	
+Thu Jul  4 04:10:15 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* shades.c (rec_copy_cells): Removed recursion, `reg_'-variables
+ 	cache global variables in registers, and `page_info_t.generation'
+ 	is a pointer to the `generation_info_t', not the generation
+ 	itself.  Quite a bit of benchmarking.
+
+	* shades.[hc]: Partial redesign of the memory organization.
+  	Particularly, the first generation and actual database (starting
+ 	from `mem_base') as now allocated with the same allocation call,
+ 	the first generation is located right after the actual database,
+	and the first generation is allocated DOWNWARDS.
+
+	This made shades 64-bit clean.
+	
+	Associated minor changes in the fail-fast code.  PAGE_DEADBEEF
+	also checked for data pages.
+
+	* cells-def.h, cells.c, shades.c: `p0' is now equivalent to
+ 	`p[0]'.  Minor optimization in `CELL(word_vector, ..)'.
+
+Wed Jul  3 17:03:48 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* test_simple_trie.c (test_simple_trie): Added call to
+	`can_allocate' before inserting the nest egg.
+
+Tue Jul  2 19:48:35 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* shades.c: Replaced `copy_or_follow_cell' and `scan_cells' with a
+ 	more streamlined `rec_copy_cells'.  This reduced the number of
+ 	type-dependent switches from 3 to 1 per each surviving cell, and
+ 	may have a somewhat improved overall efficiency otherwise too.
+  	Resulted in an approximately 10-20% CPU-speedup of the collector.
+
+	* shades.h, shades.c: Try to use registers for the most frequenly
+ 	used global variables.  On a SPARC this did result in a measurable
+ 	overall speedup.
+
+	* io.c: Define `O_SYNC' to 0 if it isn't given.
+
+Mon Jul  1 02:20:13 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* shades.h, shades.c: Moved `page_number_t' and dependend
+ 	definitions from the header file to `shades.c' and propagated
+ 	associated changes elsewhere (`simple_trie.c' and `test_io.c').
+
+	Optimized, practically rewrote first generation management.  If
+ 	with gcc and unless debugging, it inlines `can_allocate' and
+ 	`allocate'.  If debugging, the first generation is padded and
+ 	unused parts of the first generation are deadbeefed.  This should
+ 	help detecting dangling pointers.  Additionally it is checked that
+ 	all calls to `allocate' have also been verified by a prior
+ 	`can_allocate'.
+
+	* test_gc.c: Added new update patterns `--static' and `--dag'.
+	Move database initialization after argument parsing.  A handful of
+	cleanups.
+
+Fri Jun 28 06:54:31 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* shades.c (major_gc_step): Some optimizations:
+
+	Added more generationality; Collect generations only if we are
+ 	idling or if fewer than 6 new generations have been allocated
+ 	since the previous major collection.  Otherwise collect the new
+ 	collections since the previous major collection and 8 additional
+ 	previously collected generations.
+
+	Do a major collection at least every 5th time even if the above
+ 	conditions would hold for a medium-generation collection.
+
+	Once initiated major gc, keep on working it at least one
+ 	`major_gc_step' at a time.
+
+	* shades.c (intra_batch_collect, flush_batch): Do nothing if the
+	first generation is empty.
+
+	* shades.c: Several optional fail-fast features, such as
+	0xDEADBEEFing the freed pages in `free_page'.
+
+	* shades.c (major_gc_step): Fixed a bug caused by applying
+ 	`copy_or_follow_cell' to NULL_PTR's in remembered sets.
+
+	* shades.c (flush_batch): Fixed a bug that allowed entirely
+ 	extinct generations to fail; `number_of_copied_pages' was
+ 	incorrectly reset to zero after a call to `major_gc', not before.
+	Don't `write_page' unless there's something to write.
+
+	* shades.c: A handful of cleanups and renamings, such as 
+	`next_batched' -> `next_written' in `page_info_t' and
+	`insert_page_to_batch' -> `write_page'.
+	
+	* io.c: Removed exiting if `fchmod' or `fchown' failed.
+	
+	* test_gc.c: Wrote.
+
+	* test_aux.c: Common auxiliary routines for all test and benchmark
+ 	programs.  Contains currently a crude clock and a Zipfian random
+	number generator.
+
+	* Cut out test code from within actual files to distinct new files
+ 	and executables.  Associated changes in `Makefile.in'.  `shades.c'
+ 	no longer contains a `main', but instead shades compiles to a
+ 	library `libshades.a'.
+
+Thu Jun 27 02:48:20 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* Fixes and improved statistics related to --enable-gc-profiling.
+
+	* A crude and subsubsuboptimal version of mature garbage
+	collection appears to work.
+
+	* shades.c (major_gc_step, major_gc): Wrote.
+
+	(intra_batch_collect): Added code that creates a distinct
+ 	generation of the cells copied from the first generation.
+
+	(intra_batch_collect, flush_batch): Numerous additions related to
+ 	generation management and mature generation collection.
+  	`flush_batch' calls `major_gc' in the beginning of each group
+ 	commit.
+
+	* shades.c (copy_or_follow_cell): Added code that allows it to be
+ 	used for copying cells in mature generations and code that updates
+ 	remembered sets of referred generations.  Added some bookkeeping
+ 	code and variables.
+
+	* shades.c: Separated `batched_pages'-list functionality of the
+ 	`next'-field in `page_info_t's to a separate field `next_batched'.
+  	Associated changes elsewhere.
+
+	* shades.c: Wrote `generation_info_t', `allocate_generation`,
+ 	`free_generation'.
+
+	* shades.c: Renamed `rem_set_XXX's to `XXX_rem_set's.
+
+	* params.h: Added parameters `MAX_GC_EFFORT', `MAX_GC_LIMIT',
+	and `START_GC_LIMIT' which control the behavior of the mature
+	garbage collector.
+
+Wed Jun 26 18:09:09 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* configure.in: Added option --enable-gc-profiling.
+
+	* shades.c: Wrote `rem_set_allocate', `rem_set_prepend',
+	and `rem_set_free'.
+
+Thu Jun 20 07:22:36 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* io.[hc], shades.c: Made the io-interface ignorant of shades.h,
+ 	in particular we now pass page addresses and lengths instead of
+ 	`page_number_t's.  This is a minor optimization (not the full page
+ 	needs always to be written), but also allows us later to mingle
+ 	more freely with the inclusion order of header files.
+
+Tue Jun 18 18:01:13 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* shades.c (is_in_first_generation): Wrote.
+	simple_trie.c: Added a check to `is_in_first_generation' before
+ 	taking the page number of the pointer whenever the database isn't
+ 	yet fully recovered.
+
+	* shades.c: Removed the old 4-way trie that implemented the
+ 	persistent page map and made use `simple_trie.[hc]' instead.
+
+	* simple_trie.c: Major cleanups and additional commentation.
+  	Except for the test programs, which could be more efficicient, and
+ 	possible splitting into smaller functions, it should be reasonably
+ 	clean now.
+
+Mon Jun 17 18:47:57 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* simple_trie.c (simple_trie_find, simple_trie_insert): Partial
+	cleanup.
+
+	* shades.c (scan_cells): Fixed a most vicious bug; the conditions
+ 	of scanning and switching to next page were ordered so that if
+ 	`intra_batch_collect' finished at the end of a page, the scanning
+ 	could run past the page end.
+
+Sat Jun 15 03:47:19 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* ABBREVS: Included this file as it currently has some
+ 	documentative value.
+
+	* simple_trie.c (simple_trie_insert): Fixed a subtle bug; NEVER
+ 	shift by more than the machine's word length.  The result is
+ 	undefined, not zero as one would assume!
+
+	The simple trie appears to work now.
+	
+	(simple_trie_test): Major additional test and benchmark
+ 	functionality.  Cleanups.
+
+	* cells.c (cell_do_fprint): Added a missing address-of -operator
+ 	in the generic cell printer.  Should now print pointers correctly.
+
+Fri Jun 14 16:02:22 1996  Antti-Pekka Liedes  <apl@shadows.cs.hut.fi>
+
+	* Removed O_TRUNC.
+
+	* Cleaned up all signal related code from io.c.
+
+	* Added some informational output to asynchronous IO to
+	  track in which order aios return.
+
+Fri Jun 14 02:46:10 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* simple_trie.[hc]: Wrote tentative versions and a test routine
+ 	invoked with `--test-simple-trie'.  Searching works, and insertion
+ 	works almost.
+
+	* cells.h: Reduced the number of cell type bits from 16 to 8.
+	
+	* Added passing arguments `argc - 1' and `argv + 1' to test
+ 	functions.  Test routines are now triggered by the
+ 	`--test-xxx'-flag, e.g. `--test-io' or `--test-simple-trie'.
+
+Thu Jun 13 23:03:30 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* io.c (io_test): Minor cleanups.
+
+	* params.h: Dropped useless parameters `LOG2_PAGE_SIZE' and
+ 	`MIN_COMPACTION_RATIO' (we don't compact, we collect).  
+
+	Also, changed `DISK_FILENAME' back to a private file name (we
+ 	should really start to do something smarter).
+
+	* Deleted `log2.h' and replaced it with the more extensive
+ 	`bitops.[hc]', taken and adapted mostly from old code.
+
+Thu Jun 13 18:52:39 1996  Antti-Pekka Liedes  <apl@shadows.cs.hut.fi>
+
+	* Gave up on signal handling stuff, it simply didn't work.
+	  Asynchronous IO now just throws aio calls straight from
+	  io_write_page().
+
+	* Added some stuff from cessu's memory speed tester for
+	  benchmarking to the end.
+
+	* Async IO now really works.
+
+Thu Jun 13 10:53:30 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* io.c (io_test): Fixed a bug in the commit batch test; the
+ 	variable `pn' was used but not updated respectively.  Also,
+ 	changed the output format a little.
+
+Wed Jun 12 16:09:08 1996  Antti-Pekka Liedes  <apl@shadows.cs.hut.fi>
+
+	* Changed some signal handling details in io.c, SIGIO is now
+	  held while some data structures are handled to avoid evil
+	  race conditions.
+
+	* Put O_SYNC back into open() calls.  This should cause SIGIO
+	  to be delivered and next aio to engage only when the previous
+	  is physically on the disk.
+
+Tue Jun 11 16:58:02 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* io.[hc]: Wrote a routine `io_test', which can be used to contain
+ 	various IO-level tests and benchmarks.  Currently creates a disk
+ 	database, reads it twice, and then starts doing simulated commit
+ 	batching.
+
+	* shades.c: If given argument `-testio', then call `io_test'.
+	
+	* A handful of minor cleanups in shades.c.
+
+	* Renamed `type_t' to `cell_type_t' in cells.h, added second
+ 	argument `cell_type_t' to `allocate', removed `CELL_SET_TYPE', and
+ 	propagated the needed changes elsewhere.  The motivation is that
+ 	now the user gets his cells already tagged, and he needn't bother
+ 	with tags any more.
+
+Mon Jun 10 09:16:19 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* First generation collection, page maps, and commit batching have
+ 	now been tentatively written.  Current main program creates a
+ 	database, virgin except for the page maps (a quadtrie).
+	Reaching for incremental development.  
+	
+	* shades.c: The persistent page map is a quadtrie, and maintained
+ 	by functions `read_page', `do_update_page_map',
+ 	`update_page_maps'.  Wrote `changed_page_list' and
+ 	`notify_page_change'.  
+	
+	Added statistics counters `number_of_{allocated,collected}_bytes'.
+	
+  	Reintroduced `page_status' into `page_header's.  
+
+	Fixed first generation size messup between `word_t's and bytes.
+	
+  	Elaborated `copy_or_follow_cell' a little further, and streamlined
+ 	it (currently restricts itself to copy only from the first
+ 	generation).  
+
+	Reserved the first word of each page to debugging purposes (this
+ 	also frees `NULL_PTR' to designate invalidity).  
+
+	Numerous other changes.
+	
+	* cells-def.h: Added two new cell types, `page_map' and `qtrie'.
+	These are mostly for internal use in `shades.c'.
+
+	* cells.c (cell_do_fprint): Added printing of the lowermost 16
+	bits of the tag word.
+
+	* shades.h: Added definition of `NULL_WORD'.
+
+	* Makefile.in ($(OBJS)): Made all objects depend on `Makefile'.
+
+	* Relaxed a slightly incorrect assertion in `io.c'.
+
+Sat Jun  8 11:48:17 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* Introduced old file `log2.h', included in `shades.h'.  Changes
+	in the `Makefile.in'.
+
+Fri Jun  7 03:04:54 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* Elaborated somewhat the specification of the root and wrote
+ 	initialization code for it in `db_create'.  Made some minor
+ 	changes, particularly in `flush_batch' and `scan_cells' that
+ 	direct the first generation collector towards using a disk map.
+
+	* cells-def.h: Incremented the `number_of_words'-expressions by
+ 	one.
+
+	* Minor cleanups in `io.c'.
+
+	* Several changes in configuration, particularly the flags
+ 	`--enable-{speed,efence,async-io}.  VC-registered the actual
+ 	`configure'-script in addition to the mere `configure.in'.
+
+Fri Jun  7 02:22:02 1996  Antti-Pekka Liedes  <apl@shadows.cs.hut.fi>
+
+	* First basics for actually asynchronous io written.  Lots of
+ 	  changes into io.[ch], currently behind `#ifdef ASYNC_IO'.
+  	  Current version of async IO uses Solaris `aiowrite' and keeps a
+ 	  list of pending writes that are engaged sequentially in FIFO
+ 	  manner.
+
+Thu Jun  6 01:35:49 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* Sketched `db_create'.
+
+	* A handful of miscellaneous cleanups to the below.
+
+	* Introduced a new parameter, `FIRST_GENERATION_SIZE'.  Some
+	cosmetic cleanups in `params.h'.
+
+	* Wrote `page_header_t', `allocate_page', `free_page',
+ 	`first_generation', `can_allocate', `allocate',
+ 	`insert_page_to_batch', `free_old_disk_pages',
+ 	`copy_or_follow_cell', `scan_cells', `intra_batch_collect', and
+ 	`flush_batch'.
+
+	* Removed batchwise time stamps and time stamp management
+ 	routines.  There probably will be no need for them.
+
+	* Removed type `page_t'.  Pages are now really only arrays of
+ 	words.  Instead of `page_t *', use the address of the first word
+	on the page.
+
+	* Introduced `CELL_TYPE_MASK' and `CELL_SET_TYPE'.  Renamed
+ 	`cell_get_size' to `cell_gets_number_of_words' because the return
+ 	value doesn't designate bytes, but words.  Some assorted name
+	changes in `cells.c'.
+
+	* Changed types of `io_{read,write}_root' so that the first
+	argument, the root, is of type `ptr_t' instead of `ptr_t *'.
+
+Wed Jun  5 16:53:46 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* `main()' in `shades.c' now calls `make_assertions_about_cells'.
+
+	* Added files `cells.[hc]' and `cells-def.h', partly by carving
+ 	them out from `shades/1/types...'.  Made assorted changes to
+ 	`Makefile.in'.
+
+Wed Jun  5 15:45:31 1996  Antti-Pekka Liedes  <apl@shadows.cs.hut.fi>
+
+	* Implemented io_number_of_free_disk_pages()
+
+	* Replaced the check for disk space exhaustion with a simpler
+	  one in io_write_page()
+
+Mon Jun  3 15:21:39 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* Removed an extra blank line in `io.c'.
+
+Sat Jun  1 02:37:14 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* Wrote a skeletal `io.[hc]' with simple allocator and synchronous
+ 	IO.  Added these to `Makefile.in'.
+
+Thu May 23 20:48:15 1996  Kenneth Oksanen  <cessu@shadows.cs.hut.fi>
+
+	* Initiated, mostly by carving some code out from previous
+ 	projects.

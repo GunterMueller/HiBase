@@ -1,0 +1,138 @@
+File:			Author(s):		Notes:
+
+AUTHORS			Cessu
+ChangeLog		EVERYBODY
+Makefile.in		Cessu, Liw
+README			Cessu
+alloca.c		PD
+TODO			Cessu
+alloca.c		PD
+antree.c		NOKIA
+antree.h		NOKIA
+asm.c			Cessu
+asm.h			Cessu
+asm_defs.h		Cessu
+asm_lex.l		Cessu
+asm_parse.y		Cessu
+asyncio-dummy.c		Apl
+asyncio-posix.c		Apl, Cessu
+asyncio-pthread.c	Apl
+asyncio.h		Apl, Cessu
+avl.c			Sirkku
+avl.h			Sirkku
+bison-or-flex		Liw
+bitops.c		Cessu			Pre-project code.
+bitops.h		Cessu			Pre-project code.
+cells-def.h		EVERYBODY
+cells.c			Cessu
+cells.h			Cessu
+config.guess		PD
+config.h.in		Cessu
+config.sub		PD
+configure.in		Cessu, Liw, Apl
+cookies.h		Cessu
+dh.c			Sirkku
+dh.h			Sirkku
+digit_string.h		NOKIA
+digit_string.c		NOKIA
+includes.h		Cessu
+insn-calls.h		Cessu
+insn-def.h		Cessu, Siva, Apl
+insn-obj.h		Cessu
+insn-string.h		Cessu
+install-sh		PD
+interp.c		Cessu
+interp.h		Cessu
+io.c			Cessu, Apl
+io.h			Cessu, Apl
+ist234.c		Sirkku
+ist234.h		Sirkku
+jpqueue.h		NOKIA
+jpqueue.c		NOKIA
+kdqtrie.c		NOKIA
+kdqtrie.h		NOKIA
+kdquadtrie.c		NOKIA
+kdquadtrie.h		NOKIA
+list.c			Cessu, Sirkku
+list.h			Cessu
+lq.c			Sirkku
+lq.h			Sirkku
+memmove.c		PD
+net.c			Apl
+net.h			Apl
+obstack.c		GPL
+obstack.h		GPL
+oid.c			Cessu
+oid.h			Cessu
+params-def.h		EVERYBODY
+params.c		Siva
+params.h		Siva
+priq.c			Sirkku
+priq.h			Sirkku
+queue.c			Sirkku
+queue.h			Sirkku
+random.c		PD
+root-def.h		EVERYBODY
+root.c			Cessu
+root.h			Cessu
+run_tpcbs		Cessu
+shades.c		Cessu
+shades.h		Cessu
+shtring.c		Liw
+shtring.h		Liw
+shtring_cursor.c	Liw
+shtring_cursor.h	Liw
+shtring_internal.c	Liw
+shtring_internal.c	Liw
+smartptr.c		Cessu			Contains post-project code.
+smartptr.h		Cessu			Contains post-project code.
+tagged.c		Cessu
+tagged.h		Cessu
+template_client.c	Apl
+template_config.h	Apl
+template_server.c	Apl
+test_access_method.c	Siva
+test_ant		NOKIA
+test_asm.c		Cessu
+test_aux.c		Cessu, Sirkku		Contains pre-project code.
+test_aux.h		Cessu, Sirkku
+test_avl.c		Sirkku
+test_bc_avl.c		Sirkku
+test_dh.c		Sirkku
+test_digit_string.c	NOKIA
+test_fib.s		Cessu
+test_gc.c		Cessu
+test_inp.c		Siva, Apl, Cessu
+test_inp.h		Siva, Apl, Cessu
+test_inp_client.c	Siva, Apl, Cessu
+test_inp_client.h	Siva, Apl, Cessu
+test_ist234.c		Sirkku
+test_jpqueue.c		NOKIA
+test_kdqtrie.c		NOKIA
+test_lq.c		Sirkku
+test_mergesort.s	Sirkku
+test_net.c		Apl
+test_net.s		Apl
+test_net_shtring.s	Apl
+test_oid.c		Siva
+test_primes.s		Apl
+test_priq.c		Sirkku
+test_queue.c		Sirkku
+test_recovery.c		Cessu
+test_shtring.c		Liw
+test_shtring_speed.c	Liw
+test_sysm.c		Siva
+test_tpcb.c		Siva
+test_tpcb.s		Siva
+test_tpcb_avl.c		Siva
+test_tpcb_dh.c		Siva
+test_tpcb_kdqt.c	Siva
+test_tpcb_triev2.c	Siva
+test_trie.c		Sirkku, Cessu
+test_triev2.c		Sirkku
+test_ulam.s		Siva
+trie.c			Sirkku, Cessu
+trie.h			Sirkku, Cessu
+triev2.c		Cessu, Sirkku
+triev2.h		Cessu, Sirkku
+whitelist.txt		NOKIA

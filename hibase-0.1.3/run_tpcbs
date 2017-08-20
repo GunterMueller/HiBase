@@ -1,0 +1,205 @@
+#!/usr/local/bin/perl
+
+($command_filename, $frst, $step, $lst, $duration, $flag) = @ARGV;
+
+if ($command_filename eq "" or $frst eq "" or $step eq "" or $lst eq "" 
+    or $duration eq "") {
+    die "Usage: run_tpcbs \'command_filename\' \'first TPC-B size\' \'TPC-B size step\' \'last TPC-B size\' \'duration\'\n";
+}
+
+if (not -e $command_filename) {
+    die "No command file \'$command_filename\' found\n";
+}
+
+open(COMMANDS, "$command_filename");
+$ncommands=0;
+while (<COMMANDS>) {
+    chop;
+
+    if (/^\s*(\S*)\s+(.*)$/) {
+	if (! -x "./$1") {
+	    die "No program called \'$1\'\n";
+	}
+	$command{$ncommands} = "$1 $2";
+	$command_prog{$ncommands} = $1;
+	$command_args{$ncommands} = $2;
+	$ncommands++;
+    }
+    if (/^\s*(\S*)\s*$/) {
+	if (! -x "./$1") {
+	    die "No program called \'$1\'\n";
+	}
+	$command{$ncommands} = "$1 ";
+	$command_prog{$ncommands} = $1;
+	$command_args{$ncommands} = "";
+	$ncommands++;
+    }
+}
+close(COMMANDS);
+
+if ($flag ne "-reuse") {
+    printf("The benchmark will last at approximately %.2f hours.\n",
+	   $ncommands * (($lst - $frst) / $step) * ($duration + 60) / 3600);
+
+    # A file for output of the test programs.  Create/truncate it.
+    truncate("$command_filename.out", 0);
+    for ($tps = $frst; $tps <= $lst; $tps += $step) {
+	for ($i = 0; $i < $ncommands; $i++) {
+	    open(OUT, ">>$command_filename.out");
+	    printf OUT "### $command_prog{$i} $tps $duration $command_args{$i}\n";
+	    close(OUT);
+	    system("./$command_prog{$i} $tps $duration $command_args{$i} >> $command_filename.out");
+	}
+    }
+}
+
+# Read the produced outputs and collect the desired information from
+# them.
+open(OUT, "$command_filename.out");
+while (<OUT>) {
+    chop;
+
+    if (/\#\#\# (\S*) (\d+) \S+ (.*)$/) {
+	$commandi = $ncommands;
+	for ($i = 0; $i < $ncommands; $i++) {
+	    if ($command{$i} eq "$1 $3") {
+		$commandi = $i;
+	    }
+	}
+	$tps = $2;
+    }
+    if (/\d*\.\d*\s*-\s*(\d*\.\d*)\s*sec:\s*Latencies:\s*\d+\s*\[\s*(\d*\.\d*)\%\]/) {
+	$lat{$commandi,$tps,$1} = $2;
+    }
+    if (/\@\@\@ Total transactions: \d+ & TPS: ([0-9]*\.[0-9]*) \@\@\@$/) {
+	$result{$commandi,$tps} = $1;
+    }
+}
+close(OUT);
+
+open(TAB, ">$command_filename.tab");
+truncate(TAB, 0);
+# Generate a default value if actual data is unavailable.
+for ($i = 0; $i < $ncommands; $i++) {
+    for ($tps = $frst; $tps <= $lst; $tps += $step) {
+	if ($defalt{$i} eq "") {
+	    $defalt{$i} = $result{$i,$tps};
+	    $prev_tps{$i} = $tps;
+	}
+    }
+    if ($defalt{$i} eq "") {
+	$defalt{$i} = 0;
+	$prev_tps{$i} = $frst;
+    }
+}
+# Produce a file of tabulated results for gnuplot.
+for ($tps = $frst; $tps <= $lst; $tps += $step) {
+    for ($i = 0; $i < $ncommands; $i++) {
+	if ($result{$i,$tps} ne "") {
+	    $defalt{$i} = $result{$i,$tps};
+	    $prev_tps{$i} = $tps;
+	}
+	printf TAB "%d\t%d\t", $prev_tps{$i}, $defalt{$i};
+    }
+    printf TAB "\n";
+}
+close(TAB);
+
+# Same for relative results.
+open(RTAB, ">$command_filename.rel.tab");
+truncate(RTAB, 0);
+for ($tps = $frst; $tps <= $lst; $tps += $step) {
+    if ($defalt{0} eq "" and $result{0,$tps} ne "") {
+	$defalt{0} = 1;
+	$prev_tps{0} = $tps;
+    }
+    for ($i = 1; $i < $ncommands; $i++) {
+	if ($result{0,$tps} ne "" 
+	    and $result{$i,$tps} ne "" 
+	    and $defalt{$i} eq "") {
+	    $defalt{$i} = $result{$i,$tps} / $result{0,$tps};
+	    $prev_tps{$i} = $tps;
+	}
+    }
+}
+if ($defalt{0} ne "") {
+    for ($tps = $frst; $tps <= $lst; $tps += $step) {
+	if ($result{0,$tps} ne "") {
+	    $prev_tps{0} = $tps;
+	}
+	printf RTAB "%d\t1\t", $prev_tps{0};
+	for ($i = 1; $i < $ncommands; $i++) {
+	    if ($result{0,$tps} ne "" and $result{$i,$tps} ne "") {
+		$defalt{$i} = $result{$i,$tps} / $result{0,$tps};
+		$prev_tps{$i} = $tps;
+	    }
+	    printf RTAB "%d\t%g\t", $prev_tps{$i}, $defalt{$i};
+	}
+	printf RTAB "\n";
+    }
+}
+close(RTAB);
+
+# Create a gnuplot command file.
+open(GPLOT, ">$command_filename.gplot");
+truncate(GPLOT, 0);
+printf GPLOT "set output \"$command_filename.eps\"\n";
+printf GPLOT "set terminal postscript landscape\n";
+printf GPLOT "set data style linespoints\n";
+for ($i = 0; $i < $ncommands; $i++) {
+    if ($i == 0) {
+	printf GPLOT "plot ";
+    } else {
+	printf GPLOT ", ";
+    }
+    printf GPLOT "\'$command_filename.tab\' using %d:%d t \"%s\"", 
+    	1+2*$i, 2+2*$i, $command{$i};
+}
+printf GPLOT "\n";
+# Same for relative results.
+printf GPLOT "set output \"$command_filename.rel.eps\"\n";
+for ($i = 0; $i < $ncommands; $i++) {
+    if ($i == 0) {
+	printf GPLOT "plot ";
+    } else {
+	printf GPLOT ", ";
+    }
+    printf GPLOT "\'$command_filename.rel.tab\' using %d:%d t \"%s\"", 
+    	1+2*$i, 2+2*$i, $command{$i};
+}
+printf GPLOT "\n";
+close(GPLOT);
+system("gnuplot < $command_filename.gplot");
+
+# Same for latency information for each command.
+for ($i = 0; $i < $ncommands; $i++) {
+    open(TAB, ">$command_filename-lat-$i.tab");
+    truncate(TAB, 0);
+    for ($tps = $frst; $tps <= $lst; $tps += $step) {
+	for ($l = 0.1; $l <= 2.0; $l += 0.1) {
+	    $ls = sprintf "%.2f", $l;
+	    if ($lat{$i,$tps,$ls} eq "") {
+		printf TAB "$tps\t$ls\t0.0\n";
+	    } else {
+		printf TAB "$tps\t$ls\t%.2f\n", $lat{$i,$tps,$ls};
+	    }
+	}
+	printf TAB "\n";
+    }
+    close(TAB);
+
+    open(GPLOT, ">$command_filename-lat-$i.gplot");
+    truncate(GPLOT, 0);
+    printf GPLOT "set output \"$command_filename-lat-$i.eps\"\n";
+    printf GPLOT "set terminal postscript landscape\n";
+    printf GPLOT "set zrange [0:100]\n";
+    printf GPLOT "set parametric\n";
+    printf GPLOT "set data style lines\n";
+    printf GPLOT "set view ,120\n";
+    printf GPLOT "set hidden3d\n";
+    printf GPLOT "set ticslevel 0\n";
+    printf GPLOT "splot \'$command_filename-lat-$i.tab\' t \"%s\"\n",
+	$command{$i};
+    close(GPLOT);
+    system("gnuplot < $command_filename-lat-$i.gplot");
+}

@@ -1,0 +1,299 @@
+dnl This file is part of the Shades main memory database system.
+dnl Process this file with autoconf to produce a configure script.
+dnl
+dnl Copyright (c) 1996, 1997 Nokia Telecommunications
+dnl All Rights Reserved.
+dnl
+dnl Authors: Kenneth Oksanen <cessu@iki.fi>
+dnl          Lars Wirzenius <liw@iki.fi>
+dnl          Antti-Pekka Liedes <apl@iki.fi>
+
+
+define([AC_CACHE_LOAD], ) dnl Disable config.cache loading
+define([AC_CACHE_SAVE], ) dnl Disacle config.cache saving
+
+AC_INIT(shades.c)
+AC_PREREQ(2.0)
+AC_CANONICAL_SYSTEM
+AC_PREFIX_DEFAULT(/usr/local/hibase)
+
+dnl Set `CFLAGS', otherwise autoconf finds something for it.
+CFLAGS=""
+
+dnl This is the default asynchronous IO implementation for
+dnl platforms that do not support any asynchronous IO variant known.
+dnl This file contains no function bodies.
+ASYNCIO="asyncio-dummy.c"
+
+dnl Checks for programs
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_RANLIB
+AC_PROG_INSTALL
+AC_CHECK_PROG(BISON, bison, bison, \$(srcdir)/bison-or-flex --bison)
+AC_CHECK_PROG(FLEX, flex, flex, \$(srcdir)/bison-or-flex --flex)
+
+if test "x$GCC" = "x"
+then
+	DEPFLAGS="-M"
+else
+	DEPFLAGS="-MM"
+fi
+AC_SUBST(DEPFLAGS)
+
+dnl Check for GNU make vs BSD make
+
+echo -n checking for GNU make vs BSD make...
+
+if test "x$MAKETYPE" = "x" -a "x$MAKENAME" = "x"
+then
+	MAKENAME=make
+fi
+
+touch config.tmp-include
+
+# Try GNU make.
+if test "x$MAKETYPE" = "x"
+then
+	cat <<'EOF' > config.tmp-makefile
+all:
+	true
+ifeq (.depend,$(wildcard .depend))
+include config.tmp-include
+endif
+EOF
+	if $MAKENAME -f config.tmp-makefile >/dev/null 2>/dev/null
+	then
+		MAKETYPE=GNU
+	fi
+fi
+
+# Try BSD make.
+if test "x$MAKETYPE" = "x"
+then
+	cat <<EOF > config.tmp-makefile
+all:
+	true
+.include "config.tmp-include"
+EOF
+	if $MAKENAME -f config.tmp-makefile >/dev/null 2>/dev/null
+	then
+		MAKETYPE=BSD
+	fi
+fi
+
+# Report, set variables, clean up
+case "$MAKETYPE" in
+GNU)
+	echo GNU make
+	DEPINCLUDE='\
+ifeq (.depend,$(wildcard .depend))\
+include .depend\
+endif'
+	;;
+BSD)
+	echo BSD make
+	DEPINCLUDE='.include ".depend"'
+	touch .depend
+	;;
+*)
+	echo unknown make, cannot continue
+	exit 1
+	;;
+esac
+
+AC_SUBST(DEPINCLUDE)
+
+rm -f config.tmp-include config.tmp-makefile
+
+dnl Checks for libraries
+
+dnl Checks for header files
+AC_STDC_HEADERS
+AC_CHECK_HEADERS(unistd.h malloc.h)
+
+dnl Check first for compiler-restricting options, then for compiler
+dnl characteristics.
+if test "x$GCC" != "x"
+then
+	WARNCFLAGS='-Wchar-subscripts -Wcomment -Wformat -Wimplicit -Wparentheses -Wreturn-type -Wswitch -Wtrigraphs -Wuninitialized -W -Wpointer-arith -Wcast-align -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wnested-externs -Winline -ansi'
+fi
+AC_ARG_ENABLE(warnings,
+  [  --enable-warnings       enable (aggressive) warnings for C compiler],
+  CFLAGS="$CFLAGS $WARNCFLAGS")
+
+AC_ARG_ENABLE(heavy-assert,
+  [  --enable-heavy-assert   enable costly internal checking],
+  CFLAGS="$CFLAGS -DENABLE_HEAVY_ASSERT=1")
+
+dnl Checks for compiler characteristics
+AC_C_CONST
+AC_C_INLINE
+AC_C_BIGENDIAN
+
+dnl Checks for types.
+AC_TYPE_SIZE_T
+AC_CHECK_SIZEOF(long)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(short)
+AC_CHECK_SIZEOF(int *)
+
+dnl Checks for library functions
+AC_FUNC_ALLOCA
+AC_CHECK_FUNCS(memalign usleep)
+
+dnl Checks for system services
+AC_STDC_HEADERS
+AC_HAVE_FUNCS(strchr memcpy)
+AC_REPLACE_FUNCS(random remove)
+AC_HAVE_HEADERS(unistd.h)
+AC_CHECK_LIB(nsl, main)
+AC_CHECK_LIB(socket, socket)
+
+dnl Checking for package options
+
+if test "x$GCC" != "x"
+then
+  if test "x$DISABLE_XOPTCFLAGS" = "x"
+  then
+    # Set compiler flags that were manually found to be best for
+    # processors that we may be expecting to have.
+    case "$target" in
+    i486-*-* | i586-*-* | i686-*-* | \
+    i486-*-*-* | i586-*-*-* | i686-*-*-* ) 
+      XOPTCFLAGS="-m486 -fforce-mem -fomit-frame-pointer -fforce-addr";;
+    i386-*-* | i386-*-*-* )
+      XOPTCFLAGS="-fomit-frame-pointer";;
+    esac
+  fi
+fi
+
+AC_ARG_ENABLE(gprof,
+  [  --enable-gprof          enable profiling for gprof],
+  [
+    CFLAGS="$CFLAGS -pg"
+    LDFLAGS="$LDFLAGS -pg" 
+    AC_CHECK_LIB(dl, main)		# Needed on Solaris!?
+    DISABLE_XOPTCFLAGS="yes"
+  ])
+
+AC_ARG_ENABLE(efence,
+  [  --enable-efence         enable the 'efence' malloc debugger],
+  [
+    LIBS="$LIBS -lefence"
+    DISABLE_XOPTCFLAGS="yes"
+  ])
+
+AC_ARG_ENABLE(red-zones,
+  [  --enable-red-zones      enable red zones in first generation],
+  [
+    if test "X$enableval" != "Xno"
+    then
+      CFLAGS="-DENABLE_RED_ZONES -UNDEBUG"
+    else
+      CFLAGS="-UENABLE_RED_ZONES"
+    fi
+  ])
+
+AC_ARG_ENABLE(speed,
+  [  --enable-speed          disable checks, enable optimizations],
+  CFLAGS="$CFLAGS -O3 $XOPTCFLAGS -DNDEBUG",
+  [
+    if test "$GCC" != "x"
+    then
+      CFLAGS="-O -g $CFLAGS"
+    else
+      CFLAGS="-g $CFLAGS"
+    fi
+  ])
+
+AC_ARG_ENABLE(bcprof,
+  [  --enable-bcprof         enable byte code interpreter profiling],
+  [
+    if test "X$enableval" != "Xno"
+    then
+      CFLAGS="$CFLAGS -DENABLE_BCPROF"
+    else
+      CFLAGS="$CFLAGS -UENABLE_BCPROF"
+    fi
+  ])
+
+AC_ARG_ENABLE(async-io, 
+  [  --enable-async-io       enable asynchronous IO (POSIX.4 or POSIX.4a)],
+  AC_CHECK_HEADER(aio.h,
+    [
+      CFLAGS="$CFLAGS -DASYNC_IO -DPOSIX_IO"
+      AC_CHECK_LIB(aio, aio_write)
+      AC_CHECK_LIB(aio, aiowrite)
+      ASYNCIO="asyncio-posix.c"
+    ],
+    AC_CHECK_HEADER(pthread.h,
+      [
+        CFLAGS="$CFLAGS -DASYNC_IO -DTHREAD_IO -D_REENTRANT"
+        AC_CHECK_LIB(pthread, pthread_create)
+dnl FreeBSD doesn't have pthread-library but rather a threaded version
+dnl of the whole C library called `libc_r'.
+        AC_CHECK_LIB(c_r, pthread_create)
+        ASYNCIO="asyncio-pthread.c"
+      ],
+      AC_MSG_WARN(No asynchronous IO variant known to Shades supported))))
+
+AC_ARG_ENABLE(posix-io, 
+  [  --enable-posix-io       enable asynchronous IO (POSIX.4 aio_* calls)],
+  AC_CHECK_HEADER(aio.h,
+    [
+      CFLAGS="$CFLAGS -DASYNC_IO -DPOSIX_IO"
+      AC_CHECK_LIB(aio, aio_write)
+      AC_CHECK_LIB(aio, aiowrite)
+      ASYNCIO="asyncio-posix.c"
+    ],
+    AC_MSG_WARN(POSIX.4 asynchronous IO not supported by this system.)))
+
+AC_ARG_ENABLE(pthread-io, 
+  [  --enable-pthread-io     enable asynchronous IO (POSIX.4a pthreads)],
+  AC_CHECK_HEADER(pthread.h,
+    [
+      CFLAGS="$CFLAGS -DASYNC_IO -DTHREAD_IO -D_REENTRANT"
+      AC_CHECK_LIB(pthread, pthread_create)
+dnl FreeBSD doesn't have pthread-library but rather a threaded version
+dnl of the whole C library called `libc_r'.
+      AC_CHECK_LIB(c_r, pthread_create)
+      ASYNCIO="asyncio-pthread.c"
+    ],
+    AC_MSG_WARN(POSIX.4a pthreads not supported by this system.)))
+
+AC_ARG_ENABLE(file-load-balancing,
+  [  --enable-file-load-balancing  enable load balancing for database files],
+  CFLAGS="$CFLAGS -DFILE_LOAD_BALANCING")
+
+AC_ARG_ENABLE(file-usage-statistics,
+  [  --enable-file-usage-statistics  enable statistics of file usages],
+  CFLAGS="$CFLAGS -DFILE_USAGE_STATISTICS")
+
+AC_ARG_ENABLE(gc-profiling, 
+  [  --enable-gc-profiling   enable garbage collection profiling],
+  CFLAGS="$CFLAGS -DGC_PROFILING")
+
+AC_ARG_ENABLE(page-size,
+  [  --enable-page-size=X    use the given page size of X kilobytes, default is 64],
+  CFLAGS="$CFLAGS -DPAGE_SIZE='($enableval*1024)'",
+  CFLAGS="$CFLAGS -DPAGE_SIZE='(64*1024)'")
+
+AC_ARG_ENABLE(chunk-size,
+  [  --enable-chunk-size=X    use the given string chunk size of X characters, default is 32],
+  CFLAGS="$CFLAGS -DSHTRING_CHUNK_MAX='($enableval)'",
+  CFLAGS="$CFLAGS -DSHTRING_CHUNK_MAX='(32)'")
+
+AC_ARG_ENABLE(optimized-root-location,
+  [  --enable-optimized-root-location  enable optimized root writing],
+  CFLAGS="$CFLAGS -DOPTIMIZED_ROOT_LOCATION")
+
+AC_ARG_ENABLE(insn-trace,
+  [  --enable-insn-trace     enable the bytecode interpreter's insn trace],
+  CFLAGS="$CFLAGS -DINTERP_INSN_TRACE")
+
+AC_SUBST(ASYNCIO)
+
+dnl Output result files.
+AC_CONFIG_HEADER(config.h)
+AC_OUTPUT(Makefile)

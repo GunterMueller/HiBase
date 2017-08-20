@@ -1,0 +1,693 @@
+
+	Foreword
+	========
+
+This is the code of HiBase as it was on 31.5.1998 but so that all such
+code has been removed, which was either written by a Nokia employee or
+which somehow possibly related to trade secrets or benchmarks
+specified by Nokia.  `Makefile.in', `cells-def.h', `shades.c',
+`tagged.c', `cells.c' and `text_access_method.c' have been edited
+accordingly.  Only a handful of changes (see `ChangeLog') have been
+made to this distribution since.  
+
+This code, except for the omissions described above and this Foreword
+to this README file and the LICENSE-file, is identical to the one used
+in the Intelligent Networks benchmark mentioned in Kenneth Oksanen's
+Licentiate's Thesis.  The code for the other benchmarks in the Thesis
+is newer and not yet included in this first public release.  Most
+notably, this release does not contain the Nolang/Shines compiler and
+its libraries, graphical user interfaces etc.  We have the right to
+release the full version of HiBase under GPL after a two year
+quaranteen in the fall of 2002.  The same release will most likely
+also contain a dual-licensed reimplementation of Shades intended for
+64-bit computers.
+
+The project's home page is at
+	http://hibase.cs.hut.fi/
+and Oksanen's Licentiate's Thesis can be obtained from
+	http://hibase.cs.hut.fi/hibase/cessu-lic.ps
+or, for a hard-copy, by contacting `cessu@iki.fi'.
+
+
+	Introduction
+	============
+
+Shades is a recovery method for a main memory database system, and
+consequently also the name of the whole main memory database server
+program.
+
+The main features of Shades are:
+  o  full ACIDity (not all of ACID yet implemented),
+  o  high performance 
+     (16090 TPC-B-like transactions per second with a 10 tps database
+     on a 180 MHz Pentium Pro),
+  o  real-time compacting garbage collection,
+  o  byte code interpreter with continuation passing style (first-class
+     continuations),
+  o  replication (not included in at least this GPL-distribution).
+
+
+	The HiBase-project
+	------------------
+
+Shades was developed and implemented in the HiBase-project, a joint
+effort between the Laboratory of Information Processing Science and
+Helsinki University of Technology (HUT), and Nokia Telecommunications
+(NTC).  The project started in 1996 was aborted in 2001.
+
+People who have contributed to the HiBase-project at Helsinki
+University of Techonology are
+  prof. Eljas Soisalon-Soininen	ess@cs.hut.fi	http://www.cs.hut.fi/~ess
+  Kenneth Oksanen		cessu@iki.fi	http://iki.fi/cessu
+  Sirkku-Liisa Paajanen		sirkku@iki.fi	http://iki.fi/sirkku
+  Kengatharan Sivalingam	siva@iki.fi	http://iki.fi/siva
+  Antti-Pekka Liedes		apl@iki.fi	http://iki.fi/apl
+  Lars Wirzenius		liw@iki.fi	http://iki.fi/liw
+and subsequently of the development of this code
+  Marko Lyly			mlyly@iki.fi	http://iki.fi/mlyly
+  Ville Laurikari		vl@iki.fi	http://iki.fi/vl
+  Sami-Pekka Haavisto		sph@iki.fi	http://iki.fi/sph
+  Jussi Rautio			jrautio@cs.hut.fi http://www.cs.hut.fi/~jrautio
+and at Nokia Telecommunications
+  Matti Tikkanen		mti@ntc.nokia.com
+  Jukka-Pekka Iivonen		iivonen@iki.fi	http://iki.fi/iivonen
+  Susanna Lehtinen		slehtine@ntc.nokia.com
+  Vera Izrailit			izrailit@ntc.nokia.com
+  Petri Mäenpää			pmaenpaa@ntc.nokia.com
+
+
+	Copyrights and Licenses
+	-----------------------
+
+The pertinent copyright and authorship notices are described in the
+first lines of each code file.  The pertinent license should be
+described in an accompanying file called `LICENSE'.
+
+Some library-like parts of Shades have their own copyrights and
+licenses.
+  o  `alloca.c' by Doug Gwyn is in public domain.
+  o  `bitops.[hc]' by Kenneth Oksanen are copyrighted, but can be
+     used and distributed freely.
+  o  `memmove.c' by Chris Torek is distributed under the very liberal
+     BSD license.
+  o  `random.c' is also under the BSD license.
+  o  `obstack.[hc]' is copyrighted to the FSF and distributed under
+     GPL.  (Should Shades be distributed, this would render it GPL'd,
+     so obstacks will have to be replaced before further release.)
+  o `smartptr.[hc]' contain code written by Kenneth Oksanen after the
+    project, but of course it too is released under GPL like the
+    original `smartptr.[hc]'.
+
+
+	Installation
+	============
+
+	Prerequisites
+	-------------
+
+Probably most UNIX-like operating systems will do.  Required features
+are:
+  o  a 32-bit unsigned integer type,
+  o  at least 32-bit default pointer types,
+  o  ANSI C.
+
+Appreciated, but not strictly necessary features are:
+  o  the GNU C-compiler,
+  o  asynchronous IO (currently POSIX.4 and Solaris `aiowrite's
+     supported) or alternatively POSIX.4 pthreads,
+  o  an efficient raw-device interface.
+
+Since Shades is a main memory database, you probably want a machine
+with a reasonable amount of RAM and a rather capable disk.  The
+smallest databases we have tried are as small as 8MB.  The largest
+databases have been around 100MB, but probably much larger databases
+behave just as well.
+
+Some rather machine-specific optimizations have been done for Alpha
+and Sparc processors when compiled with GNU C.  See the early lines in
+file `shades.h'.
+
+Media recovery (mirroring) and replication have not yet been
+implemented, but if you eventually wish to try out those features, you
+should have two disks for mirroring and two machines with same
+endianness and a fast interconnection for replication.
+
+
+	Compiling Shades
+	----------------
+
+Shades has been developed to use GNU autoconf.  Therefore it should
+suffice to issue
+	./configure
+	make
+and then with sufficient privileges
+	make install
+on practically any UNIX-like platform.  If configure complains about a
+failing C compiler, you can tell it to use another one with `CC=mycc
+./configure'.  If it complains about a lacking either GNU or BSD make
+but you have installed GNU make with the name `gmake', issue
+`MAKETYPE=GNU ./configure'.
+
+If you don't give configure any arguments, it compiles a debugging
+version of Shades for use in the development process.  The debugging
+version is heavily loaded with asserts, so if you want high
+performance, you should give the argument `--enable-speed' and
+additionally `--enable-async-io' for asynchronous IO.  Issue
+`./configure --help' for a list of all options.  Note that the default
+installation directories are `/usr/local/hibase/{bin,lib,include,doc}'.
+
+Some site-specific problems we have encountered:
+  alpha-dec-osf4.0 with native compiler: You can't have asynchronous
+    IO without `--enable-speed'.  The reason is that in the
+    `AC_CHECK_LIB' for `-laio' the linker fails if it is given any
+    debugging flags (e.g. `-g'), which is the case unless you have
+    `--enable-speed'.
+  alpha-dec-osf4.0: Considerable unreliability with the
+    POSIX.4-compliant asynchronous writing.  Use the pthreads-version
+    instead.
+  linux (2.0.30): When using pthread-based asynchronous IO the kernel
+    tends to swap out the shades-process instead of shrinking
+    buffer caches. We fixed this by adding a minute patch to the
+    kernel in file `mm/vmscan.c' in function `swap_out' in order to
+    prevent any shades process to be swapped out.  A corresponding fix
+    will hopefully be present in newer kernels, but if not, then
+    contact <cessu@iki.fi> for more information on the patch.
+
+Probably you can't cross-compile Shades as it currently has been
+written.  Even if all of `autoconf.in's tests could be cross-compiled,
+some cpp-level tests in `insn-def.h' might not cross-compile correctly
+(see `TAGGED_TO_SIGNED_WORD').
+
+You can instruct Shades to use a different "page size" with
+`--enable-page-size=X' where `X' is an integer power of two.
+Generally, the larger the page size, the better performance, although
+at some point the performance increase becomes insignificant and the
+database manager starts to waste memory.  The default of 64 kB should
+be a safe compromise, though you might want to use e.g. 16 kB pages on
+a slow machine with little memory or with emphasis on real-time
+operation rather than thruput.  Conversely, you might use 256 kB on a
+contrary case.
+
+
+	Parametrizing Shades
+	--------------------
+
+Before running Shades, you should parametrize it.  Parametrization
+means telling Shades how large a database image it should use, where
+it should put its disk backup file, etc.
+
+The parametrization in Shades can be done by manipulating the file
+`params-def.h' and remaking (depreciated), setting up a resource file
+in `libdir/.shadesrc', `~/.shadesrc', or `./.shadesrc', by setting
+environment variables, or by giving suitable command line arguments.
+Each parameter setting overrides the previous.  Unless overridden with
+configure, the default libdir is `/usr/local/hibase/lib'.
+
+For example in order to set the backup file to `/var/shades-db', you
+might add the line
+	disk_filename=/var/shades-db
+in one of the resource files, set the environment variable
+`SHADES_DISK_FILENAME' correspondingly, or give the command line
+argument `--disk-filename=/var/shades-db'.
+
+A deeper look into the parametrization of Shades is given in the
+comments of file `params.h', and the actual parameters, their types
+and default values are given in `params-def.h'.
+
+Some parameters must be identical in successful runs of Shades if the
+database will be recovered.  In particular `disk_skip_nbytes' must be
+identical forever, `disk_filename' can only change if the database
+files are changed respectively, and the product
+
+
+	Running Shades
+	--------------
+
+Currently there is no single executable which starts a Shades server,
+since not all the functionality of a server-like system has yet been
+implemented.  Instead, we have a handful of test programs, each of
+which tests a level or a set of features in Shades.
+
+The test programs `test_queue', `test_priq', `test_trie',
+`test_triev2', and `test_gc' are dedicated (and constantly changing)
+programs to test a specific part of Shades.
+
+`test_tpcb' runs the TPC-B transaction test.  It needs two command
+line arguments.  The first argument tells how large the database
+should be in terms of official TPC-B database size (1 tps would
+require 100 000 account records).  The second argument tells in
+seconds for how long the test should be run.
+
+`test_asm' reads the specified byte code assembler file, and calls the
+specified byte code sequence with the given argument.  For example, to
+run the naive Fibonacci algorithm to compute the 30th Fibonacci
+number, issue
+	./test_asm test_fib.s fib 30
+
+You should find additional documentation on the assembler files in
+each of the assembler files themselves.  All files ending with the
+suffix `.s' contain byte code assembler.
+
+In addition to parameters and test program specific command line
+arguments, you can usually give `-v' or `--verbose' if you want
+verbose output, or `--show-XXX' if you wish to be a little more
+selectively verbose.  `XXX' might be e.g. `groups' to show commit
+groups, `params' to show parameters, or some test-program specific
+option, such as `progress' to show a transaction count for
+`test_tpcb'.
+
+
+	Problems?
+	---------
+
+If you get sporadic segmentation faults once the database has been
+running for a while, the most probable reasons can be:
+  o  You have set (soft or hard) limits on your resource usage.
+     See, e.g., `csh's built-in command `limit'.
+  o  Your operating system uses lazy swap allocation, and it has just
+     run out of virtual memory.
+  o  You have found a bug in Shades.  Please report to <cessu@iki.fi>.
+
+Note also, that Shades does not attempt to check the correctness of
+the byte code files (as, e.g. Java tries), and therefore corrupt byte
+code kills the server.  (We will eventually change this so that only
+the offending byte code thread and possibly the commit batch will
+fail, but not the whole server.)
+
+
+	Architecture of Shades
+	======================
+
+This Section is not somewhat obsolete, you can read a far better
+description of Shades in Kenneth Oksanen's Licentiate's Thesis
+	http://hibase.cs.hut.fi/cessu-lic.ps
+or its extended version
+	http://hibase.cs.hut.fi/cessu-lic-ext.ps
+
+
+	Fundamental Principles
+	----------------------
+
+The very basic, and very pervasive, idea in the index- and interpreter
+levels of Shades is that mutations to database objects are done
+"copy-on-write".  For example, assume you are about to insert a new
+binary tree node as a child of another binary tree node which is
+already in the binary tree.  You are not allowed to modify the old
+node, so you make a copy of the original node and store in the copied
+node the pointer to the new node.  But since the copied node's
+location in memory has changed, you have to update also the pointer to
+it by performing a copy-on-write update for its parent, and continue
+similarly to the root of the binary tree.
+
+At first the strict copy-on-write principle may sound overly
+restrictive and cumbersome, but actually an entire programming
+culture, the "functional programming" paradigm, is based on the
+concept of not allowing mutation.  The functional programming paradigm
+is often advocated to improve program readability, correctness and
+provability by ensuring "referential transparency".  
+
+Opponents of functional programming criticize it for inefficiency, but
+in Shades the very contrary is true.  The copy-on-write policy has
+turned out to allow a different, more efficient recovery method.  A
+destructive update mechanism that hides the underlying functional
+updates would incur a slowdown.
+
+The copy-on-write principle was an elective decision made early in the
+algorithmic planning of Shades: it simplifies the recovery method and
+allows more "design space" so that garbage collection and many other
+useful features have been possible to implement more efficiently than
+if we allowed arbitrary mutation anywhere in the database.
+
+(There are only a few carefully selected exceptions to the
+copy-on-write rule.  One is in the garbage collector itself.  The
+second exception is in the interpreter: only occasionally do we have
+to copy the function's activation record when we update or initialize
+a local variable or a temporary value.)
+
+
+	Three Layers
+	------------
+
+We assume you are familiar with the most fundamental concepts of
+databases and some of the techniques more inclined to main memory
+databases.  For an excellent introduction refer to Hector
+Garcia-Molina, Kenneth Salem, "Main Memory Database Systems: An
+Overview", IEEE Transactions on Knowledge and Data Engineering,
+Vol. 4, No. 6, December 1992.
+
+Most databases have a layered structure.  Assuming a coarse
+three-layer division of a traditional database manager, the lowest
+layer performs disk IO, provides media recovery (e.g. by mirroring or
+RAID), and crash recovery (e.g. with logs and periodic checkpointing).
+The second layer implements index structures (e.g. B-trees) on top of
+the primitives provided by the lower level.  The highest level builds
+a data model abstraction on top of the index structures, interprets
+the query language (e.g. SQL) and discusses with the clients of the
+database.
+
+In most traditional disk-based databases the recovery, index, and
+concurrency control mechanisms are deeply intertwined, and the
+database memory management is incorporated in the query language
+interpreter and the index structures.  In Shades, however, the
+recovery mechanism includes garbage collection, and the concurrency
+control is implemented at a higher level as a set of library routines
+in the programming language.  This probably results in a coarser
+locking policy and allows less concurrency than the traditional
+approach.  On the other hand fine granularity locking is not as
+important in main memory databases as it is in disk based databases,
+and furthermore Shades provides efficient means for versioning
+(snapshots) which can be used to increase concurrency.
+
+
+	IO, Recoverable Cells, GC
+	.  .  .  .  .  .  .  .  .
+
+The IO level of Shades reads and writes data to files and provides
+means for small atomic writes and synchronizing the disk write
+buffers.  The IO, particularly writes, is done preferably
+asynchronously.  The IO level is implemented in files `io.h' and
+`io-X.c', where `X' may be e.g. `posix' or `pthreads' depending on
+what your operating system supports.  During `configure' a symbolic
+link is set from `io.c' to some `io-X.c'.
+
+The basic memory object seen and used by index structures and the
+interpreter is called a "cell".  File IO is done in large pages
+(cf. `--enable-page-size=X'-option for the `configure' script), but
+cells have to be rather small so that copying them is efficient.  If
+the cell is very rarely updated, then you may use rather large cells,
+theoretically up to a few words less than the page size, but hopefully
+not more than e.g. half a kilobyte or 128 words.  A frequently updated
+cell should preferably not be larger than eight to twelve words.  The
+minimum size of the cell is two words.
+
+The different types of cells have to be described in `cells-def.h' so
+that the garbage collector and the recovery algorithm are able to
+follow and redirect the pointers in the cells.  See file `cells-def.h'
+for documentation and examples.  The files `cells.[hc]' contain useful
+macros and routines, e.g. for checking the type of the cell, checking
+its correctness, and printing it (and its descendants, if you wish).
+
+The image of the database is one large contiguous array of 32-bit
+words.  Since the array can be located in different places in memory,
+a "pointer" to a cell in the database is actually the offset of the
+cell from the beginning of the array.  The file `shades.h' contains
+macros (based on the typedefs in `includes.h') for converting "C-like"
+pointers to and from the Shades' notion of pointers.
+
+New cells are allocated from a transient (= volatile, non-recoverable)
+region of the database called the "first generation".  When the commit
+group is full, the first generation is garbage collected.  The
+surviving cells are written to disk and moved to the persistent
+(= stable, recoverable) part of the database.  Once some additional
+administrative data has also been written to disk, the transactions of
+commit group have committed successfully.  Next, if there's need or
+excess time, some garbage collection is made also in the persistent
+part of the database to make room for future commit groups.  Finally
+the first generation is cleared and control resumes to the index
+routines or the interpreter.
+
+A fixed handful of pointer and integer variables called the root block
+is the only part of the database which is modified in situ, without
+copy-on-write.  Consequently modifications to it are not transactional
+in the sense that they can be retracted by aborting the transaction (a
+sequence of root block manipulations is in fact usually the equivalent
+of a commit request).  A cell is not garbage if it referred to by a
+pointer in the root block or by another cell which is not garbage.
+The root block is written atomically at the very end of the group
+commit to a distinct position on disk and read from there in the
+beginning of recovery.  The root block is defined in `root-def.h' and
+some related tools are defined in `root.[hc]'.
+
+One final crux: the garbage collector moves cells and it redirects
+pointers within the database accordingly, but it is totally ignorant
+of any pointers from C code to the database.  Therefore the programmer
+must ensure that all cells that should not be collected away exist in
+the transitive closure of cells starting from the handful of pointers
+in the root block.  After garbage collection the C-pointers have to be
+updated from the database pointers.  In practice most, currently all,
+index operations and byte code primitives are atomic, so the above
+problem is not a considerable cause of concern.  The byte code
+interpreter, however, being the "main event loop" of the whole
+database system can not be atomic and has therefore been carefully
+crafted to cope with this issue.  Additionally some test programs have
+to pay close attention to this.
+
+The allocation of cells is done by the function `allocate'.  Checking
+that the allocation will succeed must be done prior to allocation by
+the function `can_allocate'.  The commit group is finished and garbage
+is collected by the function `flush_batch' and the functions it uses.
+See the latter part of file `shades.h' for further documentation and
+some additional tools.  The actual implementation is in file
+`shades.c'.
+
+
+	Index Structures
+	.  .  .  .  .  .
+
+The files `list.[hc]' implement the very familiar LISP-like linked
+lists and the basic tools, such as `CAR', `CDR', and `CONS'.
+
+The FIFO queue implementation of files `queue.[hc]' is based on Robert
+Hood, Robert Melville, "Real-Time Queue Operations in Pure LISP",
+Information Processing Letters, Vol. 13, No. 2, 1981, pp. 50-54.
+
+Probably the most frequently used index structure in Shades is the
+path- and width-compressing 4-way trie implemented in `triev2.[hc]'.
+
+Leaf-oriented AVL-trees are implemented in `avl.[hc]'.  These routines
+come in two flavors depending on whether the key comparison function
+is a C-function or a byte code function.
+
+Priority queues based on binomial heaps are implemented in
+`priq.[hc]'.
+
+Most (currently all) index structures are atomic, and assume they can
+allocate the amount of memory they need.  To ensure the index
+operations will succeed, the caller must test `can_allocate(X)' prior
+to the index operation call, and issue `flush_batch' if `can_allocate'
+failed.  The number `X' is the number of words the index operation
+will allocate in the worst case.  Typically the maximum allocation of
+index operation `Y' or any operation on the index `Y' is called
+`Y_MAX_ALLOCATION'.
+
+
+	Byte Code Interpreter
+	.  .  .  .  .  .  .  .
+
+As much as Shades is a main memory database, it is also a persistent
+programming language.  The application programmer's code is compiled
+to byte code, which can then be read in to the Shades database server
+and executed there by a byte code interpreter.
+
+The assembler is implemented in the files `asm*': `asm_lex.l' is the
+lex-source for the lexer, `asm_parse.y' the yacc-source for the
+parser, `asm.c' contains numerous routines that actually build (and
+optimize) the byte code sequence, `asm_defs.h' contains definitions
+internal to the assembler, and `asm.h' exports the interface to the
+rest of Shades.
+
+(Unlike Java, the byte code assembler does not (yet?) even attempt to
+check the correctness or safety of the byte code programs.  Probably
+in future a better byte code assembler will be rewritten in some other
+language and compiled to byte code itself, and the role of the current
+byte code assembler becomes a mere bootstrap loader.)
+
+The interpreter is based on byte code instead of an abstract syntax
+tree representation of the program because byte code is somewhat
+(perhaps twice?) faster and because context switching between byte
+code threads is easier than in a recursive tree evaluation.
+
+Continuation passing, closure passing style (CPS) is another technique
+applied extensively in the interpreter.  Refer to e.g. Andrew Appel,
+"Compiling with Continuations", Cambridge Univ. Press, 1992.  The
+activation records of continuations construct a linked list as in
+Appel's SML/NJ and as described in the beginning of Robert Hieb, Kent
+Dybvig, Carl Bruggeman, "Representing Control in the Presence of First
+Class Continuations", SIGPLAN'90, pp. 66-77.  (The stack-based
+continuation frame allocation presented in that paper is not used
+because it is not suitable for the allocation strategy of Shades.)
+
+The interpreter is implemented in file `interp.c' and the byte code
+instructions are defined in `insn-def.h'.
+
+Note that the interpreter's data structures (byte codes, continuation
+frames, etc.) are also stored in the database.  Therefore they attain
+all the basic properties of any other data in the database.  In
+particular, interpreted byte code programs are garbage collected,
+recoverable, and eventually also replicatable and migratable!
+
+In terms of efficiency, the byte code interpreter of Shades is
+competitive with other byte code interpreters although Shades' byte
+code processes are persistent!  We presume that for traditional
+database queries the overhead of the byte code interpreter will not be
+a serious cause of concern, e.g. in the TPC-B benchmark the overhead
+of the byte code interpreter is only 10-15%.
+
+
+	The Code
+	--------
+
+Briefly a summary of the role of most of the distributed source code:
+
+asm*		A byte code assembler.
+asyncio-*	Various OS-dependent mechanisms for asynchronous IO.
+avl.[hc]	Shaded AVL-trees.
+bitops.[hc]	Bit operations.
+cells*		Implementation and definition of type-tagged cells.
+config*		Files related to GNU configure.
+cookies.h	Magic cookies.
+dh.[hc]		Dynamic hashing.
+includes.h	Common definitions and machine-dependent configurations.
+insn-def.h	Definitions of all byte code instructions.
+interp.[hc]	A byte code interpreter and its accessories.
+io.[hc]		File IO routines.
+list.[hc]	LISP-like lists.
+net.[hc]	Interface to BSD-style TCP/IP.
+oid.[hc]	Implements object identities.
+params*		Shades' parametrization system.
+priq.[hc]	Priority queues.
+queue.[hc]	Real-time functional FIFO-queues.
+root*		Root-block management.
+shades.[hc]	Shades memory allocator, gargabe collector, and recovery.
+shtring.[hc]	New string representations and manipulation routines.
+smartptr.h	Externally visible "smart" pointers.
+trie.[hc]	Shaded path-compressed 4-way tries.
+triev2.[hc]	Shaded path- and width-compressed 4-way tries.
+                Consumes less memory than trie.[hc] for sparsely
+		distributed keys.
+
+Test programs in C:
+
+test_asm.c	Load a byte code file and call it with the specified argument.
+test_aux.[hc]	Common routines for test programs.
+test_avl.c	Test/benchmark the AVL-trees.
+test_dh.c	Test/benchmark dynamic hashing.
+test_gc.c	Test/benchmark the garbage collector, and also tries.
+test_net.c	Test the BSD-style TCP/IP glue.
+test_oid.c	Test the oid map and oid allocator.
+test_priq.c	Test/benchmark for priority queues.
+test_queue.c	Test/benchmark for the FIFO queues.
+test_recovery.c	Recover the database and continue byte code interpretation.
+test_shtring*	Tests/benchmarks for shtring routines.
+test_sysm.c	System M -paper's benchmark for Shades.
+test_tpcb.c	TPC-B benchmark for Shades at cell-level written in C.
+test_tpcb_avl.c	TPC-B benchmark using AVL-trees.
+test_tpcb_dh.c	TPC-B benchmark using AVL-trees.
+test_tpcb_triev2.c TPC-B benchmark using AVL-trees.
+test_trie.c	Tests/benchmarks for tries.
+test_triev2.c	Tests/benchmarks for triev2's.
+
+Test programs in byte code assembler:
+
+test_fib.s	Naive Fibonacci.
+test_mergesort.s List-based mergesort.
+test_primes.s	Naive prime number generator.
+test_server.s   Echo-server using TCP/IP-connections.
+test_tpcb.s	TPC-B, database size given as argument.
+test_ulam.s	Compute Ulam's (Collatz') conjecture's values.
+
+The rest of this part discusses briefly some of the most pervasive
+stylistic issues in Shades' code.
+
+
+	Naming
+	.  .  .
+
+Spaces in names are represented by underscores.
+
+Macros and enumerated values are usually fully capitalized,
+i.e. `THIS_IS_A_MACRO'.  Some exceptions do occur, usually for sake of
+compatibility.
+
+Variables and functions are written with lower case letters,
+i.e. `this_is_a_function', `this_is_a_variable'.
+
+Type names are written with lower case letters and they end with `_t'.
+
+There is no dedicated boolean type, instead use type `int' so that 0
+designates false or "no error" and any non-zero, not necessarily 1,
+value designates true or the error number.
+
+Variables and functions with truth-value semantics are named as
+intransitive statements of the fact.  For example,
+	db_is_recovered
+	can_allocate
+	is_in_first_generation
+	must_print_data
+
+Functions that construct something or change the state of the program,
+are named with transitive phrases.  For example,
+	allocate
+	clear_first_generation
+	notify_page_change
+	print_data
+Only occasionally is the verb omitted; most notably in conversion
+functions/macros the verb `convert' is omitted as obvious.
+	WORD_TO_PTR
+Similarly the verb `get' may sometimes be omitted as naïve.
+	CELL_TYPE
+
+Note also that there's a subtle difference in how these values are
+interpreted, particularly in if-conditions.  For truth-valued values,
+	if (!must_print_data)
+	  ...
+and respectively for other data,
+	if (strcmp(s, "foo") == 0)
+          ...
+
+Variables that contain data are usually named rather verbosely.  For
+example,
+	first_generation_start
+	list_of_free_pages
+	number_of_free_pages
+
+Occasionally the auxiliary verb "do" is used to denote that the
+function is in fact the actual implementor, and there's a similarly
+named public front-end function that may, e.g., hide some parameter
+initializations.  For example,
+	cell_do_fprint	(the actual implementation)
+	cell_fprint	(the public front-end)
+
+There's no strict tendency to module-wise name prefixing.  It is
+practiced only where it has been convenient, e.g. in `io.[hc]'.
+
+It is known that the current practice in naming may lead, or leads, to
+name clashes with some system's headers or some rather widely used
+software packages and libraries (such as Tcl/Tk, X11, f2c, p2c, etc.)
+For the time being we have deliberately chosen to ignore this name
+space pollution in favor of a more free and descriptive naming style.
+There's no problem in fixing the name clashes afterwards with a
+handful of trivial scripts.
+
+
+	Common Abbreviations
+	.  .  .  .  .  .  .
+
+aux		auxiliary
+bcode		byte code, byte code sequence
+cont		continuation
+csw		context switch
+db		database
+diff, delta	difference
+dpn		disk page number
+f, g		function pointers
+fd		file descriptor (of type `int')
+fp		file pointer (of type `FILE *')
+gc		garbage collection
+gn		generation number
+id		identifier (either integer or string)
+insn		instruction (usually a byte code instruction)
+ix		index
+lru		least recently used
+max		maximum
+mem		memory
+min		minimum
+oid		object identity
+p, ptr		pointer
+pn		page number
+pp		pointer to pointer
+priq		priority queue
+rec		recursively, recursion
+rvy		recovery
+shmt		shift amount
+tmp		temporary

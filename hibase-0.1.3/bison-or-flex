@@ -1,0 +1,35 @@
+#!/bin/sh
+#
+# Dummy version of Bison and Flex that just copies pre-made file from source
+# directory. The name of the source file _must_ be the last argument.
+# The actual file used is derived from the last argument by changing
+# the suffix to ".c-premade". Use --bison or --flex to choose what to emulate. 
+# In Bison mode, the file (and the related .h) is copied to cwd. 
+# In Flex mode, it is output to stdout.
+
+case "$1" in
+--flex)	kind=flex ;;
+--bison) kind=bison ;;
+*) echo "bad args!" 1>&2; exit 1 ;;
+esac
+shift
+
+for i in "$@"
+do
+	x="$i"
+done
+
+if test -z "$x"
+then
+	echo "Usage: $0 [--bison | --flex] [ignored-args] one-source-file-name" 1>&2
+	exit 1
+fi
+
+premadec=`echo "$x" | sed 's/\.[^.]*$/.c/'`
+premadeh=`echo "$x" | sed 's/\.[^.]*$/.h/'`
+
+case "$kind" in
+flex)	cat "$premadec".premade ;;
+bison)	cp "$premadec".premade `basename "$premadec"`
+	cp "$premadeh".premade `basename "$premadeh"` ;;
+esac

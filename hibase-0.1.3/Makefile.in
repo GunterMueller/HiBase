@@ -1,0 +1,200 @@
+# This file is part of the Shades main memory database system.
+#
+# Copyright (c) 1996, 1997 Nokia Telecommunications
+# All Rights Reserved.
+#
+# Authors: Kenneth Oksanen <cessu@iki.fi>
+#          Lars Wirzenius <liw@iki.fi>
+#          Antti-Pekka Liedes <apl@iki.fi>
+
+
+# NOTE: When adding new files to Shades, or removing old ones, usually
+# only the lines below should change.
+
+SIMPLESRCS=shades.c root.c params.c cells.c bitops.c trie.c triev2.c dh.c \
+	interp.c queue.c lq.c priq.c ist234.c avl.c io.c net.c asm.c list.c \
+	shtring.c shtring_internal.c oid.c smartptr.c tagged.c obstack.c
+SIMPLEHDRS=$(SIMPLESRCS:.c=.h) includes.h asyncio.h asm_defs.h cookies.h \
+	root-def.h cells-def.h params-def.h insn-def.h insn-calls.h \
+	insn-obj.h insn-string.h \
+	asm_parse.y asm_lex.l
+LONELYSRCS=shtring_cursor.c
+OPTIONALSRCS=asyncio-dummy.c asyncio-posix.c asyncio-pthread.c \
+	memmove.c random.c alloca.c
+
+TESTPROGS=test_trie test_dh test_gc test_tpcb test_queue test_lq \
+	test_priq test_avl test_bc_avl test_asm test_sysm \
+	test_recovery test_shtring test_shtring_speed \
+	test_tpcb_dh test_tpcb_triev2 test_triev2 test_tpcb_avl test_oid \
+	test_ist234 test_tpcb_ist234 test_access_method \
+	template_server template_client
+TESTASMS=test_fib.s test_tpcb.s test_mergesort.s test_ulam.s test_primes.s \
+	test_net.s
+TESTSRCS=$(TESTPROGS:=.c) test_aux.c
+TESTHDRS=template_config.h test_aux.h
+
+OTHERFILES=config.h.in configure.in Makefile.in cells-def-prep.h \
+	bison-or-flex configure config.guess config.sub install-sh \
+	run_tpcbs mkinstalldirs \
+	README AUTHORS ChangeLog
+
+PREMADE=asm_lex.c.premade asm_parse.h.premade asm_parse.c.premade
+PREMADESRCS=$(PREMADE:.premade=)
+
+# NOTE: When adding new files to Shades, or removing old ones, usually
+# no lines below need to be changed.
+
+SRCS=$(SIMPLESRCS) $(LONELYSRCS) asm_lex.c asyncio.c asm_parse.c
+OBJS=$(SRCS:.c=.o)
+ALLSRCS=$(SRCS) $(TESTSRCS)
+ALLOBJS=$(ALLSRCS:.c=.o) test_aux.o libshades.a
+TESTOBJS=$(TESTSRCS:.c=.o) test_aux.o libshades.a
+DISTFILES=$(SIMPLESRCS) $(SIMPLEHDRS) $(OPTIONALSRCS) $(LONELYSRCS) \
+	$(TESTSRCS) $(TESTHDRS) $(TESTASMS) \
+	$(OTHERFILES) $(PREMADE) $(PREMADESRCS)
+
+srcdir=@srcdir@
+VPATH=@srcdir@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+bindir = @bindir@
+libdir = @libdir@
+docdir = $(prefix)/doc
+includedir = $(prefix)/include
+
+
+SHELL=/bin/sh
+CC=@CC@
+CPP=@CPP@
+FLEX=@FLEX@
+BISON=@BISON@
+INSTALL=@INSTALL@
+INSTALL_PROGRAM=@INSTALL_PROGRAM@
+
+DEFS=@DEFS@
+CFLAGS= @CFLAGS@ -I$(srcdir)
+
+ASYNCIO=$(srcdir)/@ASYNCIO@
+LIBS=-lm @LIBS@
+LIBOBJS=@LIBOBJS@
+LDFLAGS=@LDFLAGS@
+
+TRACEDEFS=-DLIBDIR="\"@libdir@\"" -DCPP="\"@CPP@\"" -DSHADES_REV_HOST=\"`hostname`\" -DSHADES_REV_DATE="\"`date`\"" -DSHADES_REV_BY=\"`whoami`\" -DSHADES_REV_CC="\"$(CC) $(CFLAGS) $(DEFS)\""
+
+MKDEPEND=$(CC) @DEPFLAGS@ $(CFLAGS) $(CPPFLAGS) $(DEFS) -I. -I$(srcdir) $(TRACEDEFS)
+
+
+all: cells-def-prep.h asyncio.c depend libshades.a $(TESTPROGS) TAGS
+.PHONY: all
+
+libshades.a: $(OBJS)
+	ar ruv libshades.a $(OBJS)
+	@RANLIB@ libshades.a
+
+$(TESTPROGS): $(TESTOBJS)
+	$(CC) $(LDFLAGS) -o $@ $@.o test_aux.o libshades.a $(LIBS) -lm
+
+.c.o:
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(DEFS) -I. $(TRACEDEFS) $<
+
+asm_lex.c: asm_lex.l
+	$(FLEX) -t -Pasm $(srcdir)/asm_lex.l > asm_lex.c
+
+asm_parse.h asm_parse.c: asm_parse.y
+	$(BISON) -d -o asm_parse.c -p asm -t $(srcdir)/asm_parse.y
+
+cells-def-prep.h: cells-def.h insn-def.h
+	rm -f cells-def-prep.h
+	$(CPP) -P $(srcdir)/cells-def.h > cells-def-prep.h
+
+asyncio.c: Makefile
+	rm -f asyncio.c
+	ln -s $(ASYNCIO) asyncio.c
+
+premade $(PREMADE): $(PREMADESRCS)
+	for i in $(PREMADESRCS); do cp $$i $$i.premade; done
+
+$(srcdir)/configure: configure.in
+	cd $(srcdir) && autoconf
+
+Makefile: Makefile.in config.status
+	./config.status
+
+config.status: configure
+	./config.status --recheck
+
+$(ALLOBJS): Makefile
+
+TAGS: $(ALLSRCS)
+	x=""; for file in $(ALLSRCS); do \
+		if [ -f $(srcdir)/$$file ]; then x="$$x $(srcdir)/$$file"; \
+		else x="$$x $$file"; fi; done; \
+	etags $$x
+
+
+.PHONY: install installdirs
+install: installdirs libshades.a $(TESTPROGS)
+	for prog in $(TESTPROGS); \
+	do \
+	    if [ -x $(srcdir)/$$prog ]; \
+	    then \
+		$(INSTALL_PROGRAM) $(srcdir)/$$prog $(bindir)/$$prog; \
+	    fi; \
+	done
+	for hdr in $(SIMPLEHDRS); \
+	do \
+	    if [ -f $(srcdir)/$$hdr ]; \
+	    then \
+		$(INSTALL_PROGRAM) $(srcdir)/$$hdr $(includedir)/$$hdr; \
+	    fi; \
+	done
+	if [ -f $(srcdir)/libshades.a ]; \
+	then \
+	    $(INSTALL_PROGRAM) $(srcdir)/libshades.a $(libdir)/libshades.a; \
+	fi
+	if [ -f $(srcdir)/README ]; \
+	then \
+	    $(INSTALL_PROGRAM) $(srcdir)/README $(docdir)/README; \
+	fi
+
+installdirs:
+	${srcdir}/mkinstalldirs $(bindir) $(includedir) $(libdir) $(docdir)
+
+
+.PHONY: clean mostlyclean distclean realclean dist
+
+clean:
+	rm -f asyncio.c libshades.a *.o *.core
+
+distclean: clean
+	rm -f $(TESTPROGS)
+	rm -f Makefile config.h config.status config.cache config.log .depend
+
+realclean: distclean
+	rm -f TAGS configure
+	rm -f asm_lex.c asm_parse.h asm_parse.c
+	rm -f *.premade
+	rm -f cells-def-prep.h
+
+dist: $(DISTFILES)
+	if test -z "$(version)"; then echo "Set version." 1>&2; exit 1; fi
+	rm -rf shades-$(version)
+	mkdir shades-$(version)
+	cp $(DISTFILES) shades-$(version)
+	chmod u+w shades-$(version)/*
+	tar cf - shades-$(version) | gzip -9 > shades-$(version).tar.gz
+	rm -rf shades-$(version)
+
+depend: rm-depend .depend
+rm-depend:
+	rm -f .depend
+.depend: $(ALLSRCS)
+	for i in $(ALLSRCS); do \
+	  if test -f "$$i"; then x="$$x $$i"; \
+	  else x="$$x $(srcdir)/$$i"; fi; done; \
+	$(MKDEPEND) $$x > .depend
+.PHONY: depend rm-depend .depend
+.PRECIOUS: .depend
+
+@DEPINCLUDE@
